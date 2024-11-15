@@ -21,3 +21,7 @@
 [submodule "sorc/jedicmake"]
 	path = sorc/jedicmake
 	url = https://github.com/JCSDA/jedi-cmake/
+[submodule "sorc/spoc"]
+	path = sorc/spoc
+	url = https://github.com/NOAA-EMC/spoc
+	branch = develop
