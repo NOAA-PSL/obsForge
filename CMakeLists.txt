@@ -36,7 +36,7 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 #add_subdirectory( mains )
 
 # Install utility scripts.
-add_subdirectory(ush)
+#add_subdirectory(ush)
 
 # Include testing.
-add_subdirectory(test)
+#add_subdirectory(test)
