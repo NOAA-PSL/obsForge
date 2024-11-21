@@ -1,0 +1,27 @@
+[submodule "sorc/bufr-query"]
+	path = sorc/bufr-query
+	url = https://github.com/NOAA-EMC/bufr-query
+	branch = develop
+[submodule "sorc/da-utils"]
+	path = sorc/da-utils
+	url = https://github.com/NOAA-EMC/da-utils
+	branch = develop
+[submodule "sorc/ioda"]
+	path = sorc/ioda
+	url = https://github.com/JCSDA/ioda
+	branch = develop
+[submodule "sorc/oops"]
+	path = sorc/oops
+	url = https://github.com/JCSDA/oops
+	branch = develop
+[submodule "sorc/iodaconv"]
+	path = sorc/iodaconv
+	url = https://github.com/JCSDA-internal/ioda-converters
+	branch = develop
+[submodule "sorc/jedicmake"]
+	path = sorc/jedicmake
+	url = https://github.com/JCSDA/jedi-cmake/
+[submodule "sorc/spoc"]
+	path = sorc/spoc
+	url = https://github.com/NOAA-EMC/spoc
+	branch = develop

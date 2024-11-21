@@ -30,3 +30,22 @@
 *.exe
 *.out
 *.app
+
+# Ignore the following directories anywhere in the tree
+bin/
+build*/
+install*/
+
+# Ignore the following bundle repositories
+/ecbuild
+/ioda
+/ioda-data
+/iodaconv
+/jedicmake
+/oops
+/obsforge-utils
+/sorc/ioda-data
+/sorc/obsforge
+/sorc/obsforge-utils
+!/bundle/CMakeLists.txt
+/bundle/*
