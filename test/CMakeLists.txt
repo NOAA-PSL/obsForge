@@ -303,7 +303,7 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_script2netcdf_mpi4
                           script2netcdf/gdas.t00z.satwnd.abi_goes-16.tm00.nc
                           ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
 
-ecbuild_add_test( TARGET  test_obsforge_atwnd_abi_goes-17_script2netcdf_mpi8
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_script2netcdf_mpi8
 	          MPI 4
                   TYPE    SCRIPT
                   COMMAND bash
