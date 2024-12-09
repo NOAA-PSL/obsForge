@@ -4,34 +4,32 @@
 # Download the test data if we don't have it.
 # Code borrowed from NCEPLIB-bufr project...
 
-#>>orig
-#set(DOWNLOAD_URL "https://ftp.emc.ncep.noaa.gov/static_files/public/obsforge")
-#set(FILE_COLLECTION "obsforge-0.0.1.tgz")
+set(DOWNLOAD_URL "https://ftp.emc.ncep.noaa.gov/static_files/public/obsforge")
 set(FILE_COLLECTION "obsforge-0.0.0.tgz")
+#set(FILE_COLLECTION "obsforge-0.0.1.tgz")
 
 ## Get the test data if we don't have it.
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}")
    message(STATUS "Downloading: " ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
-#  file(DOWNLOAD
-#    ${DOWNLOAD_URL}/${FILE_COLLECTION}
-#    ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}
-#    SHOW_PROGRESS
-#    STATUS download_status
-#    INACTIVITY_TIMEOUT 30
-#  )
-#
-#  list(GET download_status 0 download_status_num)
-#
-#  if(NOT download_status_num EQUAL 0 OR NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
-#    # Remove empty file if download doesn't complete
-#    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${BUFR_TAR})
-#    message(STATUS "Could not download test files, not building tests")
-#    return()
-#  endif()
-#<<orig
+  file(DOWNLOAD
+    ${DOWNLOAD_URL}/${FILE_COLLECTION}
+    ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}
+    SHOW_PROGRESS
+    STATUS download_status
+    INACTIVITY_TIMEOUT 30
+  )
+
+  list(GET download_status 0 download_status_num)
+
+  if(NOT download_status_num EQUAL 0 OR NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
+    # Remove empty file if download doesn't complete
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${BUFR_TAR})
+    message(STATUS "Could not download test files, not building tests")
+    return()
+  endif()
 
 #>>emily
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_COLLECTION} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_COLLECTION} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #<<emily
 
   add_custom_target(get_obsforge_test_data ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
@@ -59,8 +57,8 @@ message("Emily checking test/CMAKE_CURRENT_BINARY_DIR - ${CMAKE_CURRENT_BINARY_D
 list( APPEND test_case
   bufr2netcdf
   script2netcdf
-  bufr_backend 
-  script_backend 
+  bufr4backend 
+  script4backend 
 )
 
 # List of test input files 
@@ -73,14 +71,14 @@ list( APPEND test_input
 
 # List of test configurations 
 list( APPEND test_config
-  bufr_bufr_backend_satwnd_amv_goes.yaml
-  bufr_bufr_backend_satwnd_amv_goes_mpi4.yaml
-  bufr_script_backend_satwnd_amv_goes.yaml
-  bufr_script_backend_satwnd_amv_goes_mpi4.yaml
-  bufr_bufr_backend_sfcsno.yaml
-  bufr_bufr_backend_sfcsno_mpi2.yaml
-  bufr_script_backend_sfcsno.yaml
-  bufr_script_backend_sfcsno_mpi2.yaml
+  bufr_bufr4backend_satwnd_amv_goes.yaml
+  bufr_bufr4backend_satwnd_amv_goes_mpi4.yaml
+  bufr_script4backend_satwnd_amv_goes.yaml
+  bufr_script4backend_satwnd_amv_goes_mpi4.yaml
+  bufr_bufr4backend_sfcsno.yaml
+  bufr_bufr4backend_sfcsno_mpi2.yaml
+  bufr_script4backend_sfcsno.yaml
+  bufr_script4backend_sfcsno_mpi2.yaml
 )
 
 # create test intput directories and make links to the input files
@@ -151,41 +149,41 @@ ecbuild_add_test( TARGET  test_obsforge_sfcsno_script2netcdf_mpi2
                           script2netcdf/gdas.t00z.sfcsno.tm00.nc
                           ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
 
-# Perform bufr_backend tests
-ecbuild_add_test( TARGET  test_obsforge_sfcsno_bufr_backend
+# Perform bufr4backend tests
+ecbuild_add_test( TARGET  test_obsforge_sfcsno_bufr4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_sfcsno.yaml"
-                          bufr_backend/gdas.t00z.sfcsno.tm00.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_sfcsno.yaml"
+                          bufr4backend/gdas.t00z.sfcsno.tm00.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_sfcsno_bufr_backend_mpi2
+ecbuild_add_test( TARGET  test_obsforge_sfcsno_bufr4backend_mpi2
                   MPI 2 
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_sfcsno_mpi2.yaml"
-                          bufr_backend/gdas.t00z.sfcsno.tm00_mpi2.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_sfcsno_mpi2.yaml"
+                          bufr4backend/gdas.t00z.sfcsno.tm00_mpi2.nc)
 
-# Perform script_backend tests
-ecbuild_add_test( TARGET  test_obsforge_sfcsno_script_backend
+# Perform script4backend tests
+ecbuild_add_test( TARGET  test_obsforge_sfcsno_script4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_sfcsno.yaml"
-                          script_backend/gdas.t00z.sfcsno.tm00.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_sfcsno.yaml"
+                          script4backend/gdas.t00z.sfcsno.tm00.nc)
 
- ecbuild_add_test( TARGET test_obsforge_sfcsno_script_backend_mpi2
+ ecbuild_add_test( TARGET test_obsforge_sfcsno_script4backend_mpi2
                   MPI 2 
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_sfcsno_mpi2.yaml"
-                          script_backend/gdas.t00z.sfcsno.tm00_mpi2.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_sfcsno_mpi2.yaml"
+                          script4backend/gdas.t00z.sfcsno.tm00_mpi2.nc)
 
 # =====================================================================
 # Tests for satwnd
@@ -327,109 +325,109 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_script2netcdf_mpi2
                           script2netcdf/gdas.t00z.satwnd.abi_goes-18.tm00.nc
                           ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
 #endif()
-# Perform bufr_backend tests
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_bufr_backend
+# Perform bufr4backend tests
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_bufr4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_satwnd_amv_goes.yaml"
-                          bufr_backend/gdas.t00z.satwnd.abi_goes-16.tm00.nc)
+			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes.yaml"
+                          bufr4backend/gdas.t00z.satwnd.abi_goes-16.tm00.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_bufr_backend
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_bufr4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_satwnd_amv_goes.yaml"
-                          bufr_backend/gdas.t00z.satwnd.abi_goes-17.tm00.nc)
+			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes.yaml"
+                          bufr4backend/gdas.t00z.satwnd.abi_goes-17.tm00.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr_backend
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_satwnd_amv_goes.yaml"
-                          bufr_backend/gdas.t00z.satwnd.abi_goes-18.tm00.nc)
+			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes.yaml"
+                          bufr4backend/gdas.t00z.satwnd.abi_goes-18.tm00.nc)
 
-# Perform bufr_backend tests with MPI
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_bufr_backend_mpi4
+# Perform bufr4backend tests with MPI
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_bufr4backend_mpi4
                   MPI 4	
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_satwnd_amv_goes_mpi4.yaml"
-                          bufr_backend/gdas.t00z.satwnd.abi_goes-16.tm00_mpi4.nc)
+			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes_mpi4.yaml"
+                          bufr4backend/gdas.t00z.satwnd.abi_goes-16.tm00_mpi4.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_bufr_backend_mpi4
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_bufr4backend_mpi4
                   MPI 4	
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_satwnd_amv_goes_mpi4.yaml"
-                          bufr_backend/gdas.t00z.satwnd.abi_goes-17.tm00_mpi4.nc)
+			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes_mpi4.yaml"
+                          bufr4backend/gdas.t00z.satwnd.abi_goes-17.tm00_mpi4.nc)
 
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr_backend_mpi4
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr4backend_mpi4
                   MPI 4 	
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr_backend_satwnd_amv_goes_mpi4.yaml"
-                          bufr_backend/gdas.t00z.satwnd.abi_goes-18.tm00_mpi4.nc)
+			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes_mpi4.yaml"
+                          bufr4backend/gdas.t00z.satwnd.abi_goes-18.tm00_mpi4.nc)
 
-# Perform script_backend tests
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_script_backend
+# Perform script4backend tests
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_script4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_satwnd_amv_goes.yaml"
-                          script_backend/gdas.t00z.satwnd.abi_goes-16.tm00.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_satwnd_amv_goes.yaml"
+                          script4backend/gdas.t00z.satwnd.abi_goes-16.tm00.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_script_backend
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_script4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_satwnd_amv_goes.yaml"
-                          script_backend/gdas.t00z.satwnd.abi_goes-17.tm00.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_satwnd_amv_goes.yaml"
+                          script4backend/gdas.t00z.satwnd.abi_goes-17.tm00.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_script_backend
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_script4backend
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_satwnd_amv_goes.yaml"
-                          script_backend/gdas.t00z.satwnd.abi_goes-18.tm00.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_satwnd_amv_goes.yaml"
+                          script4backend/gdas.t00z.satwnd.abi_goes-18.tm00.nc)
 
-# Perform script_backend tests with MPI
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_script_backend_mpi4
+# Perform script4backend tests with MPI
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_script4backend_mpi4
                   MPI 4	
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_satwnd_amv_goes_mpi4.yaml"
-                          script_backend/gdas.t00z.satwnd.abi_goes-16.tm00_mpi4.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_satwnd_amv_goes_mpi4.yaml"
+                          script4backend/gdas.t00z.satwnd.abi_goes-16.tm00_mpi4.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_script_backend_mpi4
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-17_script4backend_mpi4
                   MPI 4	
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_satwnd_amv_goes_mpi4.yaml"
-                          script_backend/gdas.t00z.satwnd.abi_goes-17.tm00_mpi4.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_satwnd_amv_goes_mpi4.yaml"
+                          script4backend/gdas.t00z.satwnd.abi_goes-17.tm00_mpi4.nc)
 
-ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_script_backend_mpi4
+ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_script4backend_mpi4
                   MPI 4	
                   TYPE    SCRIPT
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script_backend_satwnd_amv_goes_mpi4.yaml"
-                          script_backend/gdas.t00z.satwnd.abi_goes-18.tm00_mpi4.nc)
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_satwnd_amv_goes_mpi4.yaml"
+                          script4backend/gdas.t00z.satwnd.abi_goes-18.tm00_mpi4.nc)
