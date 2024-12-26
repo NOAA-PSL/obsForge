@@ -67,6 +67,12 @@ list( APPEND test_input
   bufr_satwnd_amv_goes.py
   bufr_sfcsno_mapping.yaml
   bufr_sfcsno.py
+  bufr_adpsfc_prepbufr_mapping.yaml
+  bufr_adpsfc_prepbufr.py
+  bufr_sfcshp_prepbufr_mapping.yaml
+  bufr_sfcshp_prepbufr.py
+  bufr_acft_profiles_prepbufr_mapping.yaml
+  bufr_acft_profiles_prepbufr.py
 )
 
 # List of test configurations 
@@ -79,6 +85,18 @@ list( APPEND test_config
   bufr_bufr4backend_sfcsno_mpi2.yaml
   bufr_script4backend_sfcsno.yaml
   bufr_script4backend_sfcsno_mpi2.yaml
+  bufr_bufr4backend_adpsfc_prepbufr_mpi0.yaml
+  bufr_bufr4backend_adpsfc_prepbufr_mpi4.yaml
+  bufr_script4backend_adpsfc_prepbufr_mpi0.yaml
+  bufr_script4backend_adpsfc_prepbufr_mpi4.yaml
+  bufr_bufr4backend_sfcshp_prepbufr_mpi0.yaml
+  bufr_bufr4backend_sfcshp_prepbufr_mpi4.yaml
+  bufr_script4backend_sfcshp_prepbufr_mpi0.yaml
+  bufr_script4backend_sfcshp_prepbufr_mpi4.yaml
+  bufr_bufr4backend_acft_profiles_prepbufr_mpi0.yaml
+  bufr_bufr4backend_acft_profiles_prepbufr_mpi4.yaml
+  bufr_script4backend_acft_profiles_prepbufr_mpi0.yaml
+  bufr_script4backend_acft_profiles_prepbufr_mpi4.yaml
 )
 
 # create test intput directories and make links to the input files
@@ -219,6 +237,7 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr2netcdf
                                                                  testrun/bufr2netcdf/gdas.t00z.satwnd.abi_{splits/satId}.tm00.nc"
                           bufr2netcdf/gdas.t00z.satwnd.abi_goes-18.tm00.nc)
 
+
 # Perform bufr2netcdf tests with MPI
 ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_bufr2netdf_mpi4
    	          MPI 4
@@ -252,6 +271,7 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr2netcdf_mpi2
                                                                  testinput/bufr_satwnd_amv_goes_mapping.yaml
                                                                  testrun/bufr2netcdf/gdas.t00z.satwnd.abi_{splits/satId}.tm00.nc"
                           bufr2netcdf/gdas.t00z.satwnd.abi_goes-18.tm00.nc)		  
+
 
 # Perform script2netcdf tests
 #if (${BUILD_PYTHON_BINDINGS})
@@ -324,6 +344,7 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_script2netcdf_mpi2
                                                              testrun/script2netcdf/gdas.t00z.satwnd.abi_{splits/satId}.tm00.nc"
                           script2netcdf/gdas.t00z.satwnd.abi_goes-18.tm00.nc
                           ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
+
 #endif()
 # Perform bufr4backend tests
 ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_bufr4backend
@@ -349,6 +370,7 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr4backend
                           netcdf
 			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes.yaml"
                           bufr4backend/gdas.t00z.satwnd.abi_goes-18.tm00.nc)
+
 
 # Perform bufr4backend tests with MPI
 ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_bufr4backend_mpi4
@@ -378,6 +400,7 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_bufr4backend_mpi4
                           netcdf
 			  "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_satwnd_amv_goes_mpi4.yaml"
                           bufr4backend/gdas.t00z.satwnd.abi_goes-18.tm00_mpi4.nc)
+
 
 # Perform script4backend tests
 ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-16_script4backend
@@ -431,3 +454,278 @@ ecbuild_add_test( TARGET  test_obsforge_satwnd_abi_goes-18_script4backend_mpi4
                           netcdf
                           "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_satwnd_amv_goes_mpi4.yaml"
                           script4backend/gdas.t00z.satwnd.abi_goes-18.tm00_mpi4.nc)
+
+# =====================================================================
+# Tests for adpsfc prepbufr
+# =====================================================================
+# Perform bufr2netcdf tests
+
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_bufr2netcdf
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.adpsfc.tm00.prepbufr
+                                                                 testinput/bufr_adpsfc_prepbufr_mapping.yaml
+                                                                 testrun/bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi0.nc"
+                          bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_bufr2netcdf_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.adpsfc.tm00.prepufr
+                                                                 testinput/bufr_adpsfc_prepbufr_mapping.yaml
+                                                                 testrun/bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc"
+                          bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc)
+
+# Perform script2netcdf tests
+#if (${BUILD_PYTHON_BINDINGS})
+
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_script2netcdf
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "testinput/bufr_adpsfc_prepbufr.py testdata/gdas.t00z.adpsfc.tm00.prepbufr
+                                                             testinput/bufr_adpsfc_prepbufr_mapping.yaml
+                                                             testrun/script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi0.nc"
+                          script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi0.nc
+                          ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
+
+# Perform script2netcdf tests with mpi
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_script2netcdf_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "testinput/bufr_adpsfc_prepbufr.py testdata/gdas.t00z.adpsfc.tm00.prepbufr
+                                                             testinput/bufr_adpsfc_prepbufr_mapping.yaml
+                                                             testrun/script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc"
+                          script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc"
+                          ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
+
+#endif()
+# Perform bufr4backend tests
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_bufr4backend
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_adpsfc_prepbufr_mpi0.yaml"
+                          bufr4backend/gdas.t00z.adpsfc_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_bufr4backend_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_adpsfc_prepbufr_mpi4.yaml"
+                          bufr4backend/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc)
+
+
+# Perform script4backend tests
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_script4backend
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_adpsfc_prepbufr_mpi0.yaml"
+                          script4backend/gdas.t00z.adpsfc_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_script4backend_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_adpsfc_prepbufr_mpi4.yaml"
+                          script4backend/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc)
+
+
+# =====================================================================
+# Tests for sfcshp prepbufr
+# =====================================================================
+# Perform bufr2netcdf tests
+
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_bufr2netcdf
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.sfcshp.tm00.prepbufr
+                                                                 testinput/bufr_sfcshp_prepbufr_mapping.yaml
+                                                                 testrun/bufr2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi0.nc"
+                          bufr2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_bufr2netcdf_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.sfcshp.tm00.prepufr
+                                                                 testinput/bufr_sfcshp_prepbufr_mapping.yaml
+                                                                 testrun/bufr2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc"
+                          bufr2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc)
+
+# Perform script2netcdf tests
+#if (${BUILD_PYTHON_BINDINGS})
+
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_script2netcdf
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "testinput/bufr_sfcshp_prepbufr.py testdata/gdas.t00z.sfcshp.tm00.prepbufr
+                                                             testinput/bufr_sfcshp_prepbufr_mapping.yaml
+                                                             testrun/script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi0.nc"
+                          script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi0.nc
+                          ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
+
+# Perform script2netcdf tests with mpi
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_script2netcdf_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "testinput/bufr_sfcshp_prepbufr.py testdata/gdas.t00z.sfcshp.tm00.prepbufr
+                                                             testinput/bufr_sfcshp_prepbufr_mapping.yaml
+                                                             testrun/script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc"
+                          script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc"
+                          ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
+
+#endif()
+# Perform bufr4backend tests
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_bufr4backend
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_sfcshp_prepbufr_mpi0.yaml"
+                          bufr4backend/gdas.t00z.sfcshp_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_bufr4backend_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_sfcshp_prepbufr_mpi4.yaml"
+                          bufr4backend/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc)
+
+
+# Perform script4backend tests
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_script4backend
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_sfcshp_prepbufr_mpi0.yaml"
+                          script4backend/gdas.t00z.sfcshp_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_script4backend_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_sfcshp_prepbufr_mpi4.yaml"
+                          script4backend/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc)
+
+
+# =====================================================================
+# Tests for acft_profiles prepbufr
+# =====================================================================
+# Perform bufr2netcdf tests
+
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_bufr2netcdf
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                                                                 testinput/bufr_acft_profiles_prepbufr_mapping.yaml
+                                                                 testrun/bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi0.nc"
+                          bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_bufr2netcdf_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                                                                 testinput/bufr_acft_profiles_prepbufr_mapping.yaml
+                                                                 testrun/bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc"
+                          bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc)
+
+# Perform script2netcdf tests
+#if (${BUILD_PYTHON_BINDINGS})
+
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_script2netcdf
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "testinput/bufr_acft_profiles_prepbufr.py testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                                                             testinput/bufr_acft_profiles_prepbufr_mapping.yaml
+                                                             testrun/script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi0.nc"
+                          script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi0.nc
+                          ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
+
+# Perform script2netcdf tests with mpi
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_script2netcdf_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "testinput/bufr_acft_profiles_prepbufr.py testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                                                             testinput/bufr_acft_profiles_prepbufr_mapping.yaml
+                                                             testrun/script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc"
+                          script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc"
+                          ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
+
+#endif()
+# Perform bufr4backend tests
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_bufr4backend
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_acft_profiles_prepbufr_mpi0.yaml"
+                          bufr4backend/gdas.t00z.acft_profiles_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_bufr4backend_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_bufr4backend_acft_profiles_prepbufr_mpi4.yaml"
+                          bufr4backend/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc)
+
+
+# Perform script4backend tests
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_script4backend
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_acft_profiles_prepbufr_mpi0.yaml"
+                          script4backend/gdas.t00z.acft_profiles_prepbufr.tm00_mpi0.nc)
+
+ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_script4backend_mpi4
+                  MPI 4
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
+                          netcdf
+                          "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_script4backend_acft_profiles_prepbufr_mpi4.yaml"
+                          script4backend/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc)
