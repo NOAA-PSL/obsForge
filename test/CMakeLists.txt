@@ -505,7 +505,7 @@ ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_script2netcdf_mpi4
                           "testinput/bufr_adpsfc_prepbufr.py testdata/gdas.t00z.adpsfc.tm00.prepbufr
                                                              testinput/bufr_adpsfc_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc"
-                          script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc"
+                          script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc
                           ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
 
 #endif()
@@ -597,7 +597,7 @@ ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_script2netcdf_mpi4
                           "testinput/bufr_sfcshp_prepbufr.py testdata/gdas.t00z.sfcshp.tm00.prepbufr
                                                              testinput/bufr_sfcshp_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc"
-                          script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc"
+                          script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc
                           ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
 
 #endif()
@@ -689,7 +689,7 @@ ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_script2netcdf_mpi
                           "testinput/bufr_acft_profiles_prepbufr.py testdata/gdas.t00z.acft_profiles.tm00.prepbufr
                                                              testinput/bufr_acft_profiles_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc"
-                          script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc"
+                          script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc
                           ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH})
 
 #endif()
