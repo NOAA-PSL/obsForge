@@ -8,7 +8,19 @@ set(DOWNLOAD_URL "https://ftp.emc.ncep.noaa.gov/static_files/public/obsforge")
 set(FILE_COLLECTION "obsforge-0.0.0.tgz")
 #set(FILE_COLLECTION "obsforge-0.0.1.tgz")
 
+## Upload data if it's not there: 
+
+#message(STATUS "NICKE UPLOADING: " ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
+#file(UPLOAD
+#    /work2/noaa/da/nesposito/obsForge_20241219/build/obsForge/test/obsforge-0.0.0.tgz
+#    ${DOWNLOAD_URL}/${FILE_COLLECTION}
+#    SHOW_PROGRESS
+#    STATUS download_status
+#    INACTIVITY_TIMEOUT 30
+#)
+
 ## Get the test data if we don't have it.
+
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}")
    message(STATUS "Downloading: " ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
   file(DOWNLOAD
@@ -465,7 +477,7 @@ ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_bufr2netcdf
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.adpsfc.tm00.prepbufr
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.prepbufr
                                                                  testinput/bufr_adpsfc_prepbufr_mapping.yaml
                                                                  testrun/bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00.nc"
                           bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00.nc)
@@ -476,7 +488,7 @@ ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_bufr2netcdf_mpi4
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.adpsfc.tm00.prepufr
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.prepufr
                                                                  testinput/bufr_adpsfc_prepbufr_mapping.yaml
                                                                  testrun/bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc"
                           bufr2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc)
@@ -489,7 +501,7 @@ ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_script2netcdf
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "testinput/bufr_adpsfc_prepbufr.py testdata/gdas.t00z.adpsfc.tm00.prepbufr
+                          "testinput/bufr_adpsfc_prepbufr.py testdata/gdas.t00z.prepufr
                                                              testinput/bufr_adpsfc_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00.nc"
                           script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00.nc
@@ -502,7 +514,7 @@ ecbuild_add_test( TARGET  test_obsforge_adpsfc_prepbufr_script2netcdf_mpi4
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "testinput/bufr_adpsfc_prepbufr.py testdata/gdas.t00z.adpsfc.tm00.prepbufr
+                          "testinput/bufr_adpsfc_prepbufr.py testdata/gdas.t00z.prepufr
                                                              testinput/bufr_adpsfc_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc"
                           script2netcdf/gdas.t00z.adpsfc_prepbufr.tm00_mpi4.nc
@@ -557,7 +569,7 @@ ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_bufr2netcdf
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.sfcshp.tm00.prepbufr
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.prepufr
                                                                  testinput/bufr_sfcshp_prepbufr_mapping.yaml
                                                                  testrun/bufr2netcdf/gdas.t00z.sfcshp_prepbufr.tm00.nc"
                           bufr2netcdf/gdas.t00z.sfcshp_prepbufr.tm00.nc)
@@ -581,7 +593,7 @@ ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_script2netcdf
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "testinput/bufr_sfcshp_prepbufr.py testdata/gdas.t00z.sfcshp.tm00.prepbufr
+                          "testinput/bufr_sfcshp_prepbufr.py testdata/gdas.t00z.prepufr
                                                              testinput/bufr_sfcshp_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00.nc"
                           script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00.nc
@@ -594,7 +606,7 @@ ecbuild_add_test( TARGET  test_obsforge_sfcshp_prepbufr_script2netcdf_mpi4
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "testinput/bufr_sfcshp_prepbufr.py testdata/gdas.t00z.sfcshp.tm00.prepbufr
+                          "testinput/bufr_sfcshp_prepbufr.py testdata/gdas.t00z.prepufr
                                                              testinput/bufr_sfcshp_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc"
                           script2netcdf/gdas.t00z.sfcshp_prepbufr.tm00_mpi4.nc
@@ -649,7 +661,7 @@ ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_bufr2netcdf
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.prepufr.acft_profiles
                                                                  testinput/bufr_acft_profiles_prepbufr_mapping.yaml
                                                                  testrun/bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00.nc"
                           bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00.nc)
@@ -660,7 +672,7 @@ ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_bufr2netcdf_mpi4
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                          "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.prepufr.acft_profiles
                                                                  testinput/bufr_acft_profiles_prepbufr_mapping.yaml
                                                                  testrun/bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc"
                           bufr2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc)
@@ -673,7 +685,7 @@ ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_script2netcdf
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "testinput/bufr_acft_profiles_prepbufr.py testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                          "testinput/bufr_acft_profiles_prepbufr.py testdata/gdas.t00z.prepufr.acft_profiles
                                                              testinput/bufr_acft_profiles_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00.nc"
                           script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00.nc
@@ -686,7 +698,7 @@ ecbuild_add_test( TARGET  test_obsforge_acft_profiles_prepbufr_script2netcdf_mpi
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh
                           netcdf
-                          "testinput/bufr_acft_profiles_prepbufr.py testdata/gdas.t00z.acft_profiles.tm00.prepbufr
+                          "testinput/bufr_acft_profiles_prepbufr.py testdata/gdas.t00z.prepufr.acft_profiles
                                                              testinput/bufr_acft_profiles_prepbufr_mapping.yaml
                                                              testrun/script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc"
                           script2netcdf/gdas.t00z.acft_profiles_prepbufr.tm00_mpi4.nc
