@@ -349,14 +349,16 @@ function(add_obsforge_test_convobs_prepbufr target_prefix obs_type obs_source te
             set(command_args
                 "testinput/bufr_${obs_type}.py testdata/gdas.t00z.prepbufr.${obs_source}
                 testinput/bufr_${obs_type}_mapping.yaml
-                testrun/${test_config}/gdas.t00z.${obs_type}.tm00.nc"
+                testrun/${test_config}/gdas.t00z.${obs_type}.tm00.nc
+		2021080100"
                 ${test_config}/gdas.t00z.${obs_type}.tm00.nc
             )
         else()
             set(command_args
-                "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.prepbufr
+                "testinput/bufr_${obs_type}.py testdata/gdas.t00z.prepbufr
                 testinput/bufr_${obs_type}_mapping.yaml
-                testrun/${test_config}/gdas.t00z.${obs_type}.tm00.nc"
+                testrun/${test_config}/gdas.t00z.${obs_type}.tm00.nc
+		2021080100"
                 ${test_config}/gdas.t00z.${obs_type}.tm00.nc
             )
         endif()
@@ -454,7 +456,7 @@ function(add_obsforge_test_convobs_prepbufr target_prefix obs_type obs_source te
         endif()
 
     else()
-	    message(Status "Unknown test configuration")     
+	    message(Status "Unknown test configuration")
     endif()
 
 endfunction()
@@ -466,7 +468,6 @@ endfunction()
 set(satobs_types "satwnd_amv_abi" "satwnd_amv_seviri" "satwnd_amv_viirs" "satwnd_amv_leogeo")
 set(test_configs "bufr2netcdf" "script2netcdf" "bufr4backend" "script4backend")
 set(mpi_counts_convobs "0" "2")
-set(mpi_counts_convobs_prepbufr "0" "4")
 set(mpi_counts_satobs "0" "4")
 
 # Associate nested lists (satellites) with each observation type
@@ -504,7 +505,7 @@ endforeach()
 # ==================================================================
 # Set test parameters for conventional observations from bufr dump
 # ==================================================================
-set(convobs_types "sfcsno")
+set(convobs_types "sfcsno" )
 
 # Get the length of the convobs_types list
 list(LENGTH convobs_types convobs_types_length)
@@ -516,20 +517,21 @@ math(EXPR convobs_types_last_index "${convobs_types_length} - 1")
 foreach(index RANGE 0 ${convobs_types_last_index})
     list(GET convobs_types ${index} convobs_type)
 
-    foreach(convobs_type ${convobs_types})
-        set(obs_source ${convobs_type})
-	foreach(test_config ${test_configs})
-	    foreach(mpi_count ${mpi_counts_convobs})
-                add_obsforge_test_convobs("test_obsforge_convobs" ${convobs_type} ${obs_source} ${test_config} ${mpi_count})
-            endforeach()
+    set(obs_source ${convobs_type})
+    foreach(test_config ${test_configs})
+        foreach(mpi_count ${mpi_counts_convobs})
+            add_obsforge_test_convobs("test_obsforge_convobs" ${convobs_type} ${obs_source} ${test_config} ${mpi_count})
         endforeach()
     endforeach()
 endforeach()
 
+
 # ==================================================================
 # Set test parameters for conventional observations from prepbufr 
 # ==================================================================
-set(convobs_prepbufr_types "adpsfc_prepbufr")
+#set(convobs_prepbufr_types "adpsfc_prepbufr" "sfcshp_prepbufr" "acft_profiles_prepbufr" "adpupa_prepbufr")
+set(convobs_prepbufr_types "adpsfc_prepbufr" "sfcshp_prepbufr" "acft_profiles_prepbufr")
+set(mpi_counts_convobs_prepbufr "0" "4")
 
 # Get the length of the convobs_prepbufr_types list
 list(LENGTH convobs_prepbufr_types convobs_prepbufr_types_length)
@@ -545,12 +547,10 @@ foreach(index RANGE 0 ${convobs_prepbufr_types_last_index})
     string(REPLACE "_prepbufr" ";prepbufr" convobs_prepbufr_type_parts "${convobs_prepbufr_type}")
     list(GET convobs_prepbufr_type_parts 0 obs_source)
 
-    foreach(convobs_prepbufr_type ${convobs_prepbufr_types})
-        set(obs_source ${convobs_prepbufr_type})
-        foreach(test_config ${test_configs})
-            foreach(mpi_count ${mpi_counts_convobs_prepbufr})
-                add_obsforge_test_convobs_prepbufr("test_obsforge_convobs_prepbufr" ${convobs_prepbufr_type} ${obs_source} ${test_config} ${mpi_count})
-            endforeach()
+    set(obs_source ${convobs_prepbufr_type})
+    foreach(test_config ${test_configs})
+        foreach(mpi_count ${mpi_counts_convobs_prepbufr})
+            add_obsforge_test_convobs_prepbufr("test_obsforge_convobs_prepbufr" ${convobs_prepbufr_type} ${obs_source} ${test_config} ${mpi_count})
         endforeach()
     endforeach()
 endforeach()
