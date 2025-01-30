@@ -11,7 +11,7 @@ observations:
       engine:
         type: bufr
         obsfile: "./testdata/gdas.t00z.prepbufr.acft_profiles"
-        mapping file: "./testinput/testinput/bufr_acft_profiles_prepbufr_mapping.yaml"
+        mapping file: "./testinput/bufr_acft_profiles_prepbufr_mapping.yaml"
     obsdataout:
       engine:
         type: H5File
