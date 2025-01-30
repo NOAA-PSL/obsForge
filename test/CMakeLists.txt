@@ -529,8 +529,7 @@ endforeach()
 # ==================================================================
 # Set test parameters for conventional observations from prepbufr 
 # ==================================================================
-#set(convobs_prepbufr_types "adpsfc_prepbufr" "sfcshp_prepbufr" "acft_profiles_prepbufr" "adpupa_prepbufr")
-set(convobs_prepbufr_types "adpsfc_prepbufr" "sfcshp_prepbufr" "acft_profiles_prepbufr")
+set(convobs_prepbufr_types "adpsfc_prepbufr" "sfcshp_prepbufr" "acft_profiles_prepbufr" "adpupa_prepbufr")
 set(mpi_counts_convobs_prepbufr "0" "4")
 
 # Get the length of the convobs_prepbufr_types list
