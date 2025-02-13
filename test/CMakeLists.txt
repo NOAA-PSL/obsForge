@@ -6,7 +6,7 @@ project(obsforge_tests)
 # =============================================================
 # Function to add tests for satellite observations dynamically
 # =============================================================
-function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name sat_name test_config mpi_count)
+function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name sat_name file_name test_config mpi_count)
 
     # bufr2netcdf
     if(test_config STREQUAL "bufr2netcdf") 
@@ -15,8 +15,8 @@ function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name 
         set(command_args
             "${CMAKE_BINARY_DIR}/bin/bufr2netcdf.x testdata/gdas.t00z.${obs_source}.tm00.bufr_d
             testinput/bufr_${obs_type}_mapping.yaml
-            testrun/${test_config}/gdas.t00z.${obs_source}.${sensor_name}_{splits/satId}.tm00.nc"
-            ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00.nc
+            testrun/${test_config}/gdas.t00z.${file_name}_{splits/satId}.tm00.nc"
+            ${test_config}/gdas.t00z.${file_name}_${sat_name}.tm00.nc
         )
         if(mpi_count GREATER 0)
             set(target_name "${target_name}_mpi${mpi_count}")
@@ -27,7 +27,8 @@ function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name 
                 TYPE SCRIPT
                 COMMAND bash
                 ARGS ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh netcdf ${command_args}
-                ${env_args}
+#                RESOURCE_GROUPS "MEMORY=200000"
+		${env_args}
             )
         else()
             # Add the test
@@ -36,6 +37,7 @@ function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name 
                 TYPE SCRIPT
                 COMMAND bash
                 ARGS ${CMAKE_BINARY_DIR}/bin/bufr_comp.sh netcdf ${command_args}
+#                RESOURCE_GROUPS "MEMORY=200000"
                 ${env_args}
             )
         endif()
@@ -47,8 +49,10 @@ function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name 
         set(command_args
             "testinput/bufr_${obs_type}.py testdata/gdas.t00z.${obs_source}.tm00.bufr_d
             testinput/bufr_${obs_type}_mapping.yaml
-            testrun/${test_config}/gdas.t00z.${obs_source}.${sensor_name}_{splits/satId}.tm00.nc"
-            ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00.nc
+            testrun/${test_config}/gdas.t00z.${file_name}_{splits/satId}.tm00.nc"
+            ${test_config}/gdas.t00z.${file_name}_${sat_name}.tm00.nc
+#            testrun/${test_config}/gdas.t00z.${obs_source}.${sensor_name}_{splits/satId}.tm00.nc"
+#            ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00.nc
         )
         set(env_args
             "ENVIRONMENT PYTHONPATH=${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages:$ENV{PYTHONPATH}"
@@ -83,7 +87,8 @@ function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name 
             set(target_name "${target_name}_mpi${mpi_count}")
             set(command_args
                 "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_${test_config}_${obs_type}_mpi${mpi_count}.yaml"
-                ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00_mpi${mpi_count}.nc
+                ${test_config}/gdas.t00z.${file_name}_${sat_name}.tm00_mpi${mpi_count}.nc
+#               ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00_mpi${mpi_count}.nc
             )
             # Add the test
             ecbuild_add_test(
@@ -117,7 +122,8 @@ function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name 
             set(target_name "${target_name}_mpi${mpi_count}")
             set(command_args
                 "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_${test_config}_${obs_type}_mpi${mpi_count}.yaml"
-                ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00_mpi${mpi_count}.nc
+#               ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00_mpi${mpi_count}.nc
+                ${test_config}/gdas.t00z.${file_name}_${sat_name}.tm00_mpi${mpi_count}.nc
             )
             # Add the test
             ecbuild_add_test(
@@ -131,7 +137,8 @@ function(add_obsforge_test_satobs target_prefix obs_type obs_source sensor_name 
         else()
             set(command_args
                 "${CMAKE_BINARY_DIR}/bin/time_IodaIO.x testinput/bufr_${test_config}_${obs_type}.yaml"
-                ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00.nc
+                ${test_config}/gdas.t00z.${file_name}.${sensor_name}_${sat_name}.tm00.nc
+#               ${test_config}/gdas.t00z.${obs_source}.${sensor_name}_${sat_name}.tm00.nc
             )
             # Add the test
             ecbuild_add_test(
@@ -299,12 +306,13 @@ endfunction()
 # Set test parameters for satellite observations
 # ===============================================
 
-set(satobs_types "satwnd_amv_abi" "satwnd_amv_seviri" "satwnd_amv_viirs" "satwnd_amv_leogeo")
+set(satobs_types "atms" "satwnd_amv_abi" "satwnd_amv_seviri" "satwnd_amv_viirs" "satwnd_amv_leogeo")
 set(test_configs "bufr2netcdf" "script2netcdf" "bufr4backend" "script4backend")
 set(mpi_counts_convobs "0" "2")
 set(mpi_counts_satobs "0" "4")
 
 # Associate nested lists (satellites) with each observation type
+set_property(GLOBAL PROPERTY atms_satellites "npp;n20;n21")
 set_property(GLOBAL PROPERTY satwnd_amv_abi_satellites "goes-16;goes-17;goes-18")
 set_property(GLOBAL PROPERTY satwnd_amv_seviri_satellites "m8;m9;m10;m11")
 set_property(GLOBAL PROPERTY satwnd_amv_viirs_satellites "npp;n20;n21")
@@ -319,18 +327,41 @@ math(EXPR satobs_types_last_index "${satobs_types_length} - 1")
 # ======================================================
 foreach(index RANGE 0 ${satobs_types_last_index})
     list(GET satobs_types ${index} satobs_type)
-    
-    # Extract components from satobs_type
+   
+    # Split satobs_type into parts using "_" as a delimiter
     string(REPLACE "_" ";" satobs_type_parts "${satobs_type}")
-    list(GET satobs_type_parts 0 obs_source)    # Extract "satwnd"
-    list(GET satobs_type_parts 2 sensor_name)   # Extract "abi"
+
+    # Get the length of the split list
+    list(LENGTH satobs_type_parts parts_length)
+
+    # Default values (in case components do not exist)
+    set(obs_source "unknown")
+    set(sensor_name "unknown")
+
+    # Extract components based on the length of satobs_type_parts
+    if(parts_length EQUAL 1)
+        # Example: "atms" (single part)
+        set(obs_source "${satobs_type}")
+        set(sensor_name "${satobs_type}")
+	set(file_name "${satobs_type}")
+    elseif(parts_length EQUAL 3)
+        # Example: "satwnd_amv_abi"
+        list(GET satobs_type_parts 0 obs_source)  # Extract "satwnd"
+        list(GET satobs_type_parts 2 sensor_name) # Extract "abi"
+        string(CONCAT file_name "${obs_source}" "." "${sensor_name}")
+    endif()
+
+    # Extract components from satobs_type
+    #    string(REPLACE "_" ";" satobs_type_parts "${satobs_type}")
+    #    list(GET satobs_type_parts 0 obs_source)    # Extract "satwnd"
+    #    list(GET satobs_type_parts 2 sensor_name)   # Extract "abi"
 
     # Retrieve the nested list of satellite IDs for the current observation type
     get_property(satellites GLOBAL PROPERTY ${satobs_type}_satellites)
     foreach(sat_name ${satellites})
 	foreach(test_config ${test_configs})
 	    foreach(mpi_count ${mpi_counts_satobs})
-                add_obsforge_test_satobs("test_obsforge_satobs" ${satobs_type} ${obs_source} ${sensor_name} ${sat_name} ${test_config} ${mpi_count})
+                add_obsforge_test_satobs("test_obsforge_satobs" ${satobs_type} ${obs_source} ${sensor_name} ${sat_name} ${file_name} ${test_config} ${mpi_count})
             endforeach()
         endforeach()
     endforeach()
@@ -386,6 +417,13 @@ endforeach()
 # Initialize the test_input_files and test_input_configs list
 set(test_input_files "")
 set(test_input_configs "")
+set(test_aux_files "")
+
+
+# List for test auxiliary files (test_aux_files)
+list(APPEND test_aux_files
+        "atms_beamwidth.txt"
+)
 
 # List for mapping files and Python scripts (test_input_files)
 foreach(obs_type ${obs_types}) 
@@ -395,7 +433,7 @@ foreach(obs_type ${obs_types})
     )
 endforeach()
 
-# List for mapping files and Python scripts (test_input_configs) 
+# List for test configuration files (test_input_configs) 
 foreach (test_config ${test_configs})
     foreach (obs_type ${satobs_types})
         list(APPEND test_input_configs
@@ -431,16 +469,22 @@ foreach(file ${test_input_files})
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_CURRENT_SOURCE_DIR}/../sorc/spoc/dump/mapping/${file}
-        ${CMAKE_CURRENT_BINARY_DIR}/testinput/${file}
-    )
-endforeach()
+        ${CMAKE_CURRENT_BINARY_DIR}/testinput/${file} )
+endforeach(file)
 
 # Create symlinks for input configurations files
-foreach(FILENAME ${test_input_configs})
+foreach(file ${test_input_configs})
   execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/${FILENAME}
-    ${CMAKE_CURRENT_BINARY_DIR}/testinput/${FILENAME} )
-endforeach(FILENAME)
+    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/${file}
+    ${CMAKE_CURRENT_BINARY_DIR}/testinput/${file} )
+endforeach(file)
+
+# Create symlinks for input auxiliary files
+foreach(file ${test_aux_files})
+  execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
+    ${CMAKE_CURRENT_SOURCE_DIR}/../sorc/spoc/dump/aux/${file}
+    ${CMAKE_CURRENT_BINARY_DIR}/${file} )
+endforeach(file)
 
 # ===================================================================
 # Download the test data ./build/obsForge/test/ if we don't have it
@@ -452,25 +496,25 @@ set(FILE_COLLECTION "obsforge-0.0.0.tgz")
 
 # Get the test data if we don't have it.
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}")
-   message(STATUS "Downloading: " ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
-  file(DOWNLOAD
-    ${DOWNLOAD_URL}/${FILE_COLLECTION}
-    ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}
-    SHOW_PROGRESS
-    STATUS download_status
-    INACTIVITY_TIMEOUT 30
-  )
+#   message(STATUS "Downloading: " ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
+#  file(DOWNLOAD
+#    ${DOWNLOAD_URL}/${FILE_COLLECTION}
+#    ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}
+#    SHOW_PROGRESS
+#    STATUS download_status
+#    INACTIVITY_TIMEOUT 30
+#  )
 
-  list(GET download_status 0 download_status_num)
+#  list(GET download_status 0 download_status_num)
 
-  if(NOT download_status_num EQUAL 0 OR NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
-    # Remove empty file if download doesn't complete
-    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${BUFR_TAR})
-    message(STATUS "Could not download test files, not building tests")
-    return()
-  endif()
+#  if(NOT download_status_num EQUAL 0 OR NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
+#    # Remove empty file if download doesn't complete
+#    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${BUFR_TAR})
+#    message(STATUS "Could not download test files, not building tests")
+#    return()
+#  endif()
 
-# file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_COLLECTION} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_COLLECTION} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
   add_custom_target(get_obsforge_test_data ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
   add_custom_command(
