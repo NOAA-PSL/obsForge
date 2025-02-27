@@ -157,11 +157,12 @@ set(test_configs "bufr2netcdf" "script2netcdf" "bufr4backend" "script4backend")
 # ===============================================
 # Set test parameters for satellite observations
 # ===============================================
-set(satobs_types "mtiasi" "atms" "satwnd_amv_abi" "satwnd_amv_seviri" "satwnd_amv_viirs" "satwnd_amv_leogeo")
+set(satobs_types "crisf4" "mtiasi" "atms" "satwnd_amv_abi" "satwnd_amv_seviri" "satwnd_amv_viirs" "satwnd_amv_leogeo")
 set(mpi_counts_satobs "0" "4")
 
 # Associate nested lists (satellites) with each observation type
 set_property(GLOBAL PROPERTY mtiasi_satellites "metop-a;metop-b;metop-c")
+set_property(GLOBAL PROPERTY crisf4_satellites "npp;n20;n21")
 set_property(GLOBAL PROPERTY atms_satellites "npp;n20;n21")
 set_property(GLOBAL PROPERTY satwnd_amv_abi_satellites "goes-16;goes-17;goes-18")
 set_property(GLOBAL PROPERTY satwnd_amv_seviri_satellites "m8;m9;m10;m11")
@@ -333,29 +334,30 @@ endforeach(file)
 
 set(DOWNLOAD_URL "https://ftp.emc.ncep.noaa.gov/static_files/public/obsforge")
 set(FILE_COLLECTION "obsforge-0.0.0.tgz")
+#set(FILE_COLLECTION "obsforge-0.0.0-extended.tgz")
 #set(FILE_COLLECTION "obsforge-0.0.1.tgz")
 
 # Get the test data if we don't have it.
-#if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}")
-#    message(STATUS "Downloading: ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}")
-#    file(DOWNLOAD
-#        ${DOWNLOAD_URL}/${FILE_COLLECTION}
-#        ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}
-#        SHOW_PROGRESS
-#        STATUS download_status
-#        INACTIVITY_TIMEOUT 30
-#    )
-#
-#  list(GET download_status 0 download_status_num)
-#
-#  if(NOT download_status_num EQUAL 0 OR NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
-#    # Remove empty file if download doesn't complete
-#    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${BUFR_TAR})
-#    message(STATUS "Could not download test files, not building tests")
-#    return()
-#  endif()
-#
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_COLLECTION} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}")
+    message(STATUS "Downloading: ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}")
+    file(DOWNLOAD
+        ${DOWNLOAD_URL}/${FILE_COLLECTION}
+        ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION}
+        SHOW_PROGRESS
+        STATUS download_status
+        INACTIVITY_TIMEOUT 30
+    )
+
+  list(GET download_status 0 download_status_num)
+
+  if(NOT download_status_num EQUAL 0 OR NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
+    # Remove empty file if download doesn't complete
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${BUFR_TAR})
+    message(STATUS "Could not download test files, not building tests")
+    return()
+  endif()
+
+#  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_COLLECTION} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
   add_custom_target(get_obsforge_test_data ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_COLLECTION})
   add_custom_command(
@@ -367,4 +369,4 @@ set(FILE_COLLECTION "obsforge-0.0.0.tgz")
     COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_CURRENT_BINARY_DIR} mv remote_data/testdata testdata
     COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_CURRENT_BINARY_DIR} mv remote_data/testoutput testoutput
     COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_CURRENT_BINARY_DIR} rm -rf remote_data)
-#endif()
+endif()
