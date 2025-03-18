@@ -22,5 +22,6 @@ jobs:
       - name: Pull or Use Cached Image
         run: |
           docker pull jcsda/docker-gnu-openmpi-dev:latest || true
+          mkdir -p /tmp/.docker-cache/jcsda/
           docker save -o /tmp/.docker-cache/jcsda/docker-gnu-openmpi-dev.tar jcsda/docker-gnu-openmpi-dev:latest
 
