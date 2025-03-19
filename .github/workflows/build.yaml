@@ -45,12 +45,8 @@ jobs:
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace jcsda/docker-gnu-openmpi-dev:latest /bin/bash -c "
             mkdir -p build &&
             cd build &&
-            echo "==================== what's in bundle ====================" &&
             ls /workspace/bundle &&
-            echo "==================== what's in sorc ====================" &&
             ls /workspace/sorc &&
-            echo "==================== CMake ====================" &&
             cmake /workspace/bundle/ &&
-            echo "==================== Make ====================" &&
             make -j2"
 
