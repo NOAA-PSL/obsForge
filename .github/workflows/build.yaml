@@ -40,12 +40,18 @@ jobs:
           submodules: true
           ref: main
 
-#      - name: List directory structure
-#        run: |
-#          sudo apt-get install -y tree
-#          tree -L 2 /workspace
+#      - name: Clean previous build directory
+#        run: rm -rf ${{ github.workspace }}/build
 
       - name: Build inside Docker container
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace jcsda/docker-gnu-openmpi-dev:latest /bin/bash -c "mkdir -p build && cd build && cmake ../bundle/ && make -j2"
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace jcsda/docker-gnu-openmpi-dev:latest /bin/bash -c "
+            mkdir -p build &&
+            cd build &&
+            cmake ../bundle/ &&
+            make -j2"
+
+#      - name: Build inside Docker container
+#        run: |
+#          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace jcsda/docker-gnu-openmpi-dev:latest /bin/bash -c "mkdir -p build && cd build && cmake ../bundle/ && make -j2"
 
