@@ -40,8 +40,11 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Enable SSH Debugging
-        uses: mxschmitt/action-tmate@v3  # Start SSH session before the failing step
+      - name: Debug Workspace
+        run: ls -lah /workspace/bundle/jedicmake
+
+      #- name: Enable SSH Debugging
+      #  uses: mxschmitt/action-tmate@v3  # Start SSH session before the failing step
 
       - name: Debug Environment
         run: |
