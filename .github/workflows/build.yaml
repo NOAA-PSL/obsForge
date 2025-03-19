@@ -40,23 +40,13 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Debug Workspace
-        run: ls -lah /workspace/bundle/
-
-      #- name: Enable SSH Debugging
-      #  uses: mxschmitt/action-tmate@v3  # Start SSH session before the failing step
-
-      - name: Debug Environment
-        run: |
-          uname -a
-          cat /etc/os-release
-          env | sort
-
       - name: Build inside Docker container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace jcsda/docker-gnu-openmpi-dev:latest /bin/bash -c "
             export jedi_cmake_ROOT=/opt/view
             source /etc/profile.d/z10_spack_environment.sh
+            ls -l /opt/view
+            ls /workspace
             mkdir -p build &&
             cd build &&
             cmake ../bundle/ &&
