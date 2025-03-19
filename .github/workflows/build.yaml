@@ -38,6 +38,16 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
+          fetch-depth: 0
+
+      - name: Enable SSH Debugging
+        uses: mxschmitt/action-tmate@v3  # Start SSH session before the failing step
+
+      - name: Debug Environment
+        run: |
+          uname -a
+          cat /etc/os-release
+          env | sort
 
       - name: Build inside Docker container
         run: |
