@@ -42,6 +42,8 @@ jobs:
       - name: Build inside Docker container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace jcsda/docker-gnu-openmpi-dev:latest /bin/bash -c "
+            export jedi_cmake_ROOT=/opt/view
+            source /etc/profile.d/z10_spack_environment.sh
             mkdir -p build &&
             cd build &&
             cmake ../bundle/ &&
