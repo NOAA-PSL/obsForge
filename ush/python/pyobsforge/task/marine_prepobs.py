@@ -2,10 +2,13 @@
 
 from logging import getLogger
 from typing import Dict, Any
-from wxflow import AttrDict, Task, add_to_datetime, to_timedelta, logit
-from pyobsforge.obsdb.ghrsst_db import GhrSstDatabase
-from multiprocessing import Process
-from pyobsforge.task.run_nc2ioda import run_nc2ioda
+from wxflow import AttrDict, Task, add_to_datetime, to_timedelta, logit, FileHandler
+from pyobsforge.task.providers import ProviderConfig
+from multiprocessing import Process, Manager
+from os.path import join
+from datetime import timedelta
+import glob
+from os.path import basename
 
 logger = getLogger(__name__.split('.')[-1])
 
@@ -24,131 +27,141 @@ class MarineObsPrep(Task):
             {
                 'window_begin': _window_begin,
                 'window_end': _window_end,
-                'OPREFIX': f"{self.task_config.RUN}.t{self.task_config.cyc:02d}z.",
-                'APREFIX': f"{self.task_config.RUN}.t{self.task_config.cyc:02d}z."
+                'PREFIX': f"{self.task_config.RUN}.t{self.task_config.cyc:02d}z.",
             }
         )
 
         # task_config is everything that this task should need
         self.task_config = AttrDict(**self.task_config, **local_dict)
 
-        # Initialize the GHRSST database
-        self.ghrsst_db = GhrSstDatabase(db_name="sst_obs.db",
-                                        dcom_dir=self.task_config.DCOMROOT,
-                                        obs_dir="sst")
+        # Initialize the Providers
+        self.ghrsst = ProviderConfig.from_task_config("ghrsst", self.task_config)
+        self.rads = ProviderConfig.from_task_config("rads", self.task_config)
+
+        # Initialize the list of processed ioda files
+        # TODO: Does not work. This should be a list of gathered ioda files that are created
+        #       across all processes
+        self.ioda_files = []
 
     @logit(logger)
     def initialize(self) -> None:
         """
         """
         # Update the database with new files
-        self.ghrsst_db.ingest_files()
+        self.ghrsst.db.ingest_files()
+        self.rads.db.ingest_files()
 
     @logit(logger)
     def execute(self) -> None:
         """
         """
-        processes = []
-        for provider, obs_spaces in self.task_config.providers.items():
-            logger.info(f"========= provider: {provider}")
+        with Manager() as manager:
+            # Use a Manager list to share ioda_files across processes
+            shared_ioda_files = manager.list()
 
-            # Get the obs space QC configuration
-            bounds_min = obs_spaces["qc config"]["min"]
-            bounds_max = obs_spaces["qc config"]["max"]
-            binning_stride = obs_spaces["qc config"]["stride"]
-            binning_min_number_of_obs = obs_spaces["qc config"]["min number of obs"]
+            processes = []
+            for provider, obs_spaces in self.task_config.providers.items():
+                logger.info(f"========= provider: {provider}")
+                for obs_space in obs_spaces["list"]:
+                    logger.info(f"========= obs_space: {obs_space}")
 
-            # Process each obs space
-            for obs_space in obs_spaces["list"]:
-                logger.info(f"========= obs_space: {obs_space}")
-                # extract the instrument and platform from the obs_space
-                obs_type, instrument, platform, proc_level = obs_space.split("_")
-                platform = platform.upper()
-                instrument = instrument.upper()
-                logger.info(f"Processing {platform.upper()} {instrument.upper()}")
+                    # Start a new process
+                    process = Process(target=self.process_obs_space,
+                                      args=(provider, obs_space, shared_ioda_files))
+                    process.start()
+                    processes.append(process)
 
-                # Start a new process
-                process = Process(target=self.process_obs_space,
-                                  args=(provider, obs_space, instrument, platform,
-                                        bounds_min, bounds_max,
-                                        binning_stride, binning_min_number_of_obs))
-                process.start()
-                processes.append(process)
+            # Wait for all processes to complete
+            for process in processes:
+                process.join()
 
-        # Wait for all processes to complete
-        completed_processes = []
-        for process in processes:
-            process.join()
-            completed_processes.append(process)
-        logger.info(f"completed processes: {completed_processes}")
+            # Convert the Manager list to a regular list
+            self.ioda_files = list(shared_ioda_files)
+            logger.info(f"Final ioda_files: {self.ioda_files}")
 
     @logit(logger)
     def process_obs_space(self,
                           provider: str,
                           obs_space: str,
-                          instrument: str,
-                          platform: str,
-                          bounds_min: float,
-                          bounds_max: float,
-                          binning_stride: float,
-                          binning_min_number_of_obs: int) -> None:
+                          shared_ioda_files) -> None:
+        output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.{obs_space}.tm00.nc"
+
+        # Process GHRSST
         if provider == "ghrsst":
-            return self.process_ghrsst(provider, obs_space, instrument, platform,
-                                       bounds_min, bounds_max, binning_stride, binning_min_number_of_obs)
+            parts = obs_space.split("_")
+            instrument = parts[1].upper()
+            platform = parts[2].upper()
+
+            # Process the observation space
+            kwargs = {
+                'provider': provider,
+                'obs_space': obs_space,
+                'instrument': instrument,
+                'platform': platform,
+                'obs_type': "SSTsubskin",
+                'output_file': output_file,
+                'window_begin': self.task_config.window_begin,
+                'window_end': self.task_config.window_end,
+                'task_config': self.task_config
+            }
+            result = self.ghrsst.process_obs_space(**kwargs)
+            return result
+
+        # Process RADS
+        if provider == "rads":
+            platform = obs_space.split("_")[2]
+            instrument = None
+            # TODO(G): Get the window size from the config
+            window_begin = self.task_config.window_begin - timedelta(hours=72)
+            window_end = self.task_config.window_begin + timedelta(hours=72)
+            kwargs = {
+                'provider': provider,
+                'obs_space': obs_space,
+                'instrument': instrument,
+                'platform': platform,
+                'obs_type': "",
+                'output_file': output_file,
+                'window_begin': window_begin,
+                'window_end': window_end,
+                'task_config': self.task_config
+            }
+            result = self.rads.process_obs_space(**kwargs)
+            return result
         else:
             logger.error(f"Provider {provider} not supported")
-
-    @logit(logger)
-    def process_ghrsst(self,
-                       provider: str,
-                       obs_space: str,
-                       instrument: str,
-                       platform: str,
-                       bounds_min: float,
-                       bounds_max: float,
-                       binning_stride: float,
-                       binning_min_number_of_obs: int) -> None:
-        """
-        Process a single observation space by querying the database for valid files,
-        copying them to the appropriate directory, and running the ioda converter.
-
-        Args:
-            provider (str): The data provider name.
-            obs_space (str): The observation space identifier.
-            instrument (str): The instrument used for the observations.
-            platform (str): The satellite platform name.
-            bounds_min (float): Minimum QC bound for observations.
-            bounds_max (float): Maximum QC bound for observations.
-            binning_stride (float): Stride value for binning observations.
-            binning_min_number_of_obs (int): Minimum number of observations required for binning.
-        """
-        # Query the database for valid files
-        input_files = self.ghrsst_db.get_valid_files(window_begin=self.task_config.window_begin,
-                                                     window_end=self.task_config.window_end,
-                                                     dst_dir=obs_space,
-                                                     instrument=instrument,
-                                                     satellite=platform,
-                                                     obs_type="SSTsubskin")
-        logger.info(f"number of valid files: {len(input_files)}")
-
-        # Process the observations if the obs space is not empty
-        if len(input_files) > 0:
-            # Configure the ioda converter
-            output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.{obs_space}.tm00.nc"
-            context = {'provider': provider.upper(),
-                       'window_begin': self.task_config.window_begin,
-                       'window_end': self.task_config.window_end,
-                       'bounds_min': bounds_min,
-                       'bounds_max': bounds_max,
-                       'binning_stride': binning_stride,
-                       'binning_min_number_of_obs': binning_min_number_of_obs,
-                       'input_files': input_files,
-                       'output_file': output_file}
-            result = run_nc2ioda(self.task_config, obs_space, context)
-            logger.info(f"run_nc2ioda result: {result}")
 
     @logit(logger)
     def finalize(self) -> None:
         """
         """
-        logger.info("finalize")
+        # Copy the processed ioda files to the destination directory
+        logger.info("Copying ioda files to destination COMROOT directory")
+        yyyymmdd = self.task_config['PDY'].strftime('%Y%m%d')
+
+        comout = join(self.task_config['COMROOT'],
+                      self.task_config['PSLOT'],
+                      f"{self.task_config['RUN']}.{yyyymmdd}",
+                      f"{self.task_config['cyc']:02d}",
+                      'ocean')
+
+        # Loop through the observation types
+        obs_types = ['sst', 'adt', 'icec', 'sss']
+        src_dst_obs_list = []  # list of [src_file, dst_file]
+        for obs_type in obs_types:
+            # Create the destination directory
+            comout_tmp = join(comout, obs_type)
+            FileHandler({'mkdir': [comout_tmp]}).sync()
+
+            # Glob the ioda files
+            ioda_files = glob.glob(join(self.task_config['DATA'],
+                                        f"{self.task_config['PREFIX']}*{obs_type}_*.nc"))
+            for ioda_file in ioda_files:
+                logger.info(f"ioda_file: {ioda_file}")
+                src_file = ioda_file
+                dst_file = join(comout_tmp, basename(ioda_file))
+                src_dst_obs_list.append([src_file, dst_file])
+
+        logger.info("Copying ioda files to destination COMROOT directory")
+        logger.info(f"src_dst_obs_list: {src_dst_obs_list}")
+
+        FileHandler({'copy': src_dst_obs_list}).sync()

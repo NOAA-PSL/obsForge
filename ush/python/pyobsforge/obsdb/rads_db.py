@@ -1,13 +1,13 @@
 import os
 import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 from pyobsforge.obsdb import BaseDatabase
 
 
-class GhrSstDatabase(BaseDatabase):
+class RADSDatabase(BaseDatabase):
     """Class to manage an observation file database for data assimilation."""
 
-    def __init__(self, db_name="ghrsst.db",
+    def __init__(self, db_name="rads.db",
                  dcom_dir="/lfs/h1/ops/prod/dcom/",
                  obs_dir="sst"):
         base_dir = os.path.join(dcom_dir, '*', obs_dir)
@@ -24,9 +24,7 @@ class GhrSstDatabase(BaseDatabase):
         - `filename`: The full path to the observation file (must be unique).
         - `obs_time`: The timestamp of the observation, extracted from the filename.
         - `receipt_time`: The timestamp when the file was added to the `dcom` directory.
-        - `instrument`: The instrument used to collect the observation (e.g., AVHRR, VIIRS).
-        - `satellite`: The satellite from which the observation was collected (e.g., NPP, NOAA-20).
-        - `obs_type`: The type of observation (e.g., SSTsubskin, SSTskin).
+        - `satellite`: The satellite from which the observation was collected (e.g., 3a, 3b, j3, ...).
 
         The table is created if it does not already exist.
         """
@@ -36,45 +34,30 @@ class GhrSstDatabase(BaseDatabase):
             filename TEXT UNIQUE,
             obs_time TIMESTAMP,
             receipt_time TIMESTAMP,
-            instrument TEXT,
-            satellite TEXT,
-            obs_type TEXT
+            satellite TEXT
         )
         """
         self.execute_query(query)
 
     def parse_filename(self, filename):
         """Extract metadata from filenames matching the expected pattern."""
-        parts = os.path.basename(filename).replace('_', '-').split('-')
-        if len(parts) >= 6 and parts[0].isdigit() and len(parts[0]) == 14:
-            obs_time = datetime.strptime(parts[0][0:12], "%Y%m%d%H%M")
-            obs_type = parts[4] if len(parts) > 2 else None
-            instrument = parts[5] if len(parts) > 3 else None
-            satellite = parts[6] if len(parts) > 4 else None
+        parts = os.path.basename(filename).replace('.', '_').split('_')
+        if len(parts) == 5 and parts[0] == 'rads' and parts[1] == 'adt' and parts[3].isdigit():
+            obs_time = datetime.strptime(parts[3], "%Y%j") + timedelta(hours=12)
+            satellite = parts[2]
             receipt_time = datetime.fromtimestamp(os.path.getctime(filename))
-            return filename, obs_time, receipt_time, instrument, satellite, obs_type
+            return filename, obs_time, receipt_time, satellite
         return None
 
     def ingest_files(self):
         """Scan the directory for new observation files and insert them into the database."""
-        ospo_files = glob.glob(os.path.join(self.base_dir, "*-OSPO-L3?_GHRSST-*.nc"))
-        star_files = glob.glob(os.path.join(self.base_dir, "*-STAR-L3?_GHRSST-*.nc"))
-        obs_files = ospo_files + star_files
+        obs_files = glob.glob(os.path.join(self.base_dir, "rads_adt_??_???????.nc"))
         print(f"Found {len(obs_files)} new files to ingest")
-
-        # Counter for successful ingestions
-        ingested_count = 0
-
         for file in obs_files:
             parsed_data = self.parse_filename(file)
             if parsed_data:
                 query = """
-                    INSERT INTO obs_files (filename, obs_time, receipt_time, instrument, satellite, obs_type)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO obs_files (filename, obs_time, receipt_time, satellite)
+                    VALUES (?, ?, ?, ?)
                 """
-                try:
-                    self.insert_record(query, parsed_data)
-                    ingested_count += 1
-                except Exception as e:
-                    print(f"Failed to insert record for {file}: {e}")
-        print(f"################################ Successfully ingested {ingested_count} files into the database.")
+                self.insert_record(query, parsed_data)
