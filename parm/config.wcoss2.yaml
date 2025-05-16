@@ -1,16 +1,16 @@
 obsforge:
   PSLOT: obsforge
-  HOMEobsforge: /work2/noaa/da/mchoi3/temp/obsForge
-  SDATE: 202504281800
-  EDATE: 202504300000
-  COMROOT: /work2/noaa/da/mchoi3/temp/test_obsForge/COMROOT
-  DCOMROOT: /work2/noaa/da/common/lfs/h1/ops/prod/dcom
-  DATAROOT: /work2/noaa/da/mchoi3/temp/test_obsForge/RUNDIRS
-  SCHEDULER: slurm
-  ACCOUNT: da-cpu
-  QUEUE: debug
-  PARTITION: orion
-  KEEPDATA: NO
+  HOMEobsforge: /lfs/h2/emc/da/noscrub/cory.r.martin/obsforge/obsforge/ 
+  SDATE: 202504250000
+  EDATE: 202506250000
+  COMROOT: /lfs/h2/emc/ptmp/cory.r.martin/obsforge
+  DCOMROOT: /lfs/h1/ops/prod/dcom/ 
+  DATAROOT: /lfs/h2/emc/stmp/cory.r.martin/RUNDIRS
+  SCHEDULER: pbspro
+  ACCOUNT: GFS-DEV
+  QUEUE: dev
+  PARTITION: dev 
+  KEEPDATA: YES
   assim_freq: 6
 
 aoddump:
@@ -50,9 +50,7 @@ marinedump:
         - rads_adt_j2
         - rads_adt_j3
         - rads_adt_sa
-        - rads_adt_sw        
-        - rads_adt_3a
-        - rads_adt_3b
+        - rads_adt_sw
       qc config:
         min: -2.0
         max: 3.0

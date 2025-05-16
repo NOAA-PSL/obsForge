@@ -50,6 +50,23 @@ class BaseDatabase(SQLiteDB):
         finally:
             self.disconnect()
 
+    def insert_records(self, query: str, params_list: list[tuple]) -> None:
+        """
+        Insert multiple records into the database.
+
+        :param query: SQL query for inserting records.
+        :param params_list: List of tuples containing the parameters for each record.
+        """
+        self.connect()
+        cursor = self.connection.cursor()
+        try:
+            cursor.executemany(query, params_list)
+            self.connection.commit()
+        except sqlite3.IntegrityError:
+            pass  # Skip duplicates
+        finally:
+            self.disconnect()
+
     def execute_query(self, query: str, params: tuple = None) -> list:
         """Execute a query and return the results."""
         self.connect()
