@@ -63,7 +63,7 @@ class AerosolObsPrep(Task):
                 print(f"number of valid files: {len(input_files)}")
                 obs_space = 'jrr_aod'
                 platform_out = 'n20' if platform == 'j01' else platform
-                output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.viirs_{platform_out}_aod.tm00.nc"
+                output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.viirs_{platform_out}_aod.nc"
                 context = {'provider': 'VIIRSAOD',
                            'window_begin': self.task_config.window_begin,
                            'window_end': self.task_config.window_end,
@@ -85,7 +85,8 @@ class AerosolObsPrep(Task):
                               self.task_config['PSLOT'],
                               f"{self.task_config['RUN']}.{yyyymmdd}",
                               f"{self.task_config['cyc']:02d}",
-                              'chem')
+                              'obs')
+        FileHandler({'mkdir': [comout]}).sync()
 
         # Loop through the observation types
         obs_types = ['viirs']
@@ -93,7 +94,6 @@ class AerosolObsPrep(Task):
         for obs_type in obs_types:
             # Create the destination directory
             comout_tmp = os.path.join(comout, obs_type)
-            FileHandler({'mkdir': [comout_tmp]}).sync()
 
             # Glob the ioda files
             ioda_files = glob.glob(os.path.join(self.task_config['DATA'],
@@ -101,7 +101,7 @@ class AerosolObsPrep(Task):
             for ioda_file in ioda_files:
                 logger.info(f"ioda_file: {ioda_file}")
                 src_file = ioda_file
-                dst_file = os.path.join(comout_tmp, os.path.basename(ioda_file))
+                dst_file = os.path.join(comout, os.path.basename(ioda_file))
                 src_dst_obs_list.append([src_file, dst_file])
 
         logger.info("Copying ioda files to destination COMROOT directory")

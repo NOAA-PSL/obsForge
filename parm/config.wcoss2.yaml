@@ -1,5 +1,5 @@
 obsforge:
-  PSLOT: obsforge
+  PSLOT: v0.1
   HOMEobsforge: /lfs/h2/emc/da/noscrub/cory.r.martin/obsforge/obsforge/ 
   SDATE: 202504250000
   EDATE: 202506250000

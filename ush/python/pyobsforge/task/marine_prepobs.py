@@ -92,7 +92,7 @@ class MarineObsPrep(Task):
                           provider: str,
                           obs_space: str,
                           shared_ioda_files) -> None:
-        output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.{obs_space}.tm00.nc"
+        output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.{obs_space}.nc"
 
         # Process GHRSST
         if provider == "ghrsst":
@@ -232,23 +232,20 @@ class MarineObsPrep(Task):
                       self.task_config['PSLOT'],
                       f"{self.task_config['RUN']}.{yyyymmdd}",
                       f"{self.task_config['cyc']:02d}",
-                      'ocean')
+                      'obs')
+        FileHandler({'mkdir': [comout]}).sync()
 
         # Loop through the observation types
         obs_types = ['sst', 'adt', 'icec', 'sss']
         src_dst_obs_list = []  # list of [src_file, dst_file]
         for obs_type in obs_types:
-            # Create the destination directory
-            comout_tmp = join(comout, obs_type)
-            FileHandler({'mkdir': [comout_tmp]}).sync()
-
             # Glob the ioda files
             ioda_files = glob.glob(join(self.task_config['DATA'],
                                         f"{self.task_config['PREFIX']}*{obs_type}_*.nc"))
             for ioda_file in ioda_files:
                 logger.info(f"ioda_file: {ioda_file}")
                 src_file = ioda_file
-                dst_file = join(comout_tmp, basename(ioda_file))
+                dst_file = join(comout, basename(ioda_file))
                 src_dst_obs_list.append([src_file, dst_file])
 
         logger.info("Copying ioda files to destination COMROOT directory")
