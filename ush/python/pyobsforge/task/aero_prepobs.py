@@ -53,35 +53,35 @@ class AerosolObsPrep(Task):
         """
         Execute processing for each platform in parallel using multiprocessing.
         """
-
-        def process_platform(platform):
-            logger.info(f"========= platform: {platform}")
-            input_files = self.jrr_aod_db.get_valid_files(
-                window_begin=self.task_config.window_begin,
-                window_end=self.task_config.window_end,
-                dst_dir='jrr_aod',
-                satellite=platform
-            )
-            logger.info(f"number of valid files: {len(input_files)}")
-
-            if len(input_files) > 0:
-                obs_space = 'jrr_aod'
-                platform_out = 'n20' if platform == 'j01' else platform
-                output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.viirs_{platform_out}_aod.nc"
-                context = {
-                    'provider': 'VIIRSAOD',
-                    'window_begin': self.task_config.window_begin,
-                    'window_end': self.task_config.window_end,
-                    'thinning_threshold': 0,
-                    'input_files': input_files,
-                    'output_file': output_file
-                }
-                result = run_nc2ioda(self.task_config, obs_space, context)
-                logger.info(f"run_nc2ioda result: {result}")
-
         platforms = list(self.task_config.platforms)
         with multiprocessing.Pool(processes=min(len(platforms), multiprocessing.cpu_count())) as pool:
-            pool.map(process_platform, platforms)
+            pool.map(self._process_platform, platforms)
+
+    @logit(logger)
+    def _process_platform(self, platform):
+        logger.info(f"========= platform: {platform}")
+        input_files = self.jrr_aod_db.get_valid_files(
+            window_begin=self.task_config.window_begin,
+            window_end=self.task_config.window_end,
+            dst_dir='jrr_aod',
+            satellite=platform
+        )
+        logger.info(f"number of valid files: {len(input_files)}")
+
+        if len(input_files) > 0:
+            obs_space = 'jrr_aod'
+            platform_out = 'n20' if platform == 'j01' else platform
+            output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.viirs_{platform_out}_aod.nc"
+            context = {
+                'provider': 'VIIRSAOD',
+                'window_begin': self.task_config.window_begin,
+                'window_end': self.task_config.window_end,
+                'thinning_threshold': 0,
+                'input_files': input_files,
+                'output_file': output_file
+            }
+            result = run_nc2ioda(self.task_config, obs_space, context)
+            logger.info(f"run_nc2ioda result: {result}")
 
     @logit(logger)
     def finalize(self) -> None:
