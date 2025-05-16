@@ -9,6 +9,8 @@ from wxflow import (AttrDict, Task, add_to_datetime, to_timedelta,
                     logit, FileHandler)
 from pyobsforge.obsdb.jrr_aod_db import JrrAodDatabase
 from pyobsforge.task.run_nc2ioda import run_nc2ioda
+import multiprocessing
+from functools import partial
 
 logger = getLogger(__name__.split('.')[-1])
 
@@ -51,27 +53,40 @@ class AerosolObsPrep(Task):
     def execute(self) -> None:
         """
         """
-        for platform in self.task_config.platforms:
-            print(f"========= platform: {platform}")
-            input_files = self.jrr_aod_db.get_valid_files(window_begin=self.task_config.window_begin,
-                                                          window_end=self.task_config.window_end,
-                                                          dst_dir='jrr_aod',
-                                                          satellite=platform)
-            logger.info(f"number of valid files: {len(input_files)}")
-
+        def process_platform(platform, task_config, jrr_aod_db):
+            logger.info(f"Processing platform: {platform}")
+            input_files = jrr_aod_db.get_valid_files(window_begin=task_config.window_begin,
+                                                    window_end=task_config.window_end,
+                                                    dst_dir='jrr_aod',
+                                                    satellite=platform)
+            logger.info(f"Platform {platform}: number of valid files: {len(input_files)}")
+            
+            result = None
             if len(input_files) > 0:
-                print(f"number of valid files: {len(input_files)}")
                 obs_space = 'jrr_aod'
                 platform_out = 'n20' if platform == 'j01' else platform
-                output_file = f"{self.task_config['RUN']}.t{self.task_config['cyc']:02d}z.viirs_{platform_out}_aod.nc"
+                output_file = f"{task_config['RUN']}.t{task_config['cyc']:02d}z.viirs_{platform_out}_aod.nc"
                 context = {'provider': 'VIIRSAOD',
-                           'window_begin': self.task_config.window_begin,
-                           'window_end': self.task_config.window_end,
-                           'thinning_threshold': 0,
-                           'input_files': input_files,
-                           'output_file': output_file}
-                result = run_nc2ioda(self.task_config, obs_space, context)
-                logger.info(f"run_nc2ioda result: {result}")
+                            'window_begin': task_config.window_begin,
+                            'window_end': task_config.window_end,
+                            'thinning_threshold': 0,
+                            'input_files': input_files,
+                            'output_file': output_file}
+                result = run_nc2ioda(task_config, obs_space, context)
+                logger.info(f"Platform {platform}: run_nc2ioda result: {result}")
+            
+            return platform, result
+
+        # Create a partial function with the task_config and jrr_aod_db already set
+        process_func = partial(process_platform, task_config=self.task_config, jrr_aod_db=self.jrr_aod_db)
+
+        # Use a process pool to execute the function for each platform in parallel
+        with multiprocessing.Pool() as pool:
+            results = pool.map(process_func, self.task_config.platforms)
+
+        # Log the results
+        for platform, result in results:
+            logger.info(f"Final result for platform {platform}: {result}")
 
     @logit(logger)
     def finalize(self) -> None:
