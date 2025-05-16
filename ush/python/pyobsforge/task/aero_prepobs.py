@@ -15,6 +15,31 @@ from functools import partial
 logger = getLogger(__name__.split('.')[-1])
 
 
+def _process_platform(platform, task_config, jrr_aod_db):
+    logger.info(f"Processing platform: {platform}")
+    input_files = jrr_aod_db.get_valid_files(window_begin=task_config.window_begin,
+                                            window_end=task_config.window_end,
+                                            dst_dir='jrr_aod',
+                                            satellite=platform)
+    logger.info(f"Platform {platform}: number of valid files: {len(input_files)}")
+    
+    result = None
+    if len(input_files) > 0:
+        obs_space = 'jrr_aod'
+        platform_out = 'n20' if platform == 'j01' else platform
+        output_file = f"{task_config['RUN']}.t{task_config['cyc']:02d}z.viirs_{platform_out}_aod.nc"
+        context = {'provider': 'VIIRSAOD',
+                    'window_begin': task_config.window_begin,
+                    'window_end': task_config.window_end,
+                    'thinning_threshold': 0,
+                    'input_files': input_files,
+                    'output_file': output_file}
+        result = run_nc2ioda(task_config, obs_space, context)
+        logger.info(f"Platform {platform}: run_nc2ioda result: {result}")
+    
+    return platform, result
+
+
 class AerosolObsPrep(Task):
     """
     Class for preparing and managing aerosol observations
@@ -24,59 +49,10 @@ class AerosolObsPrep(Task):
 
         _window_begin = add_to_datetime(self.task_config.current_cycle, -to_timedelta(f"{self.task_config['assim_freq']}H") / 2)
         _window_end = add_to_datetime(self.task_config.current_cycle, +to_timedelta(f"{self.task_config['assim_freq']}H") / 2)
-
-        local_dict = AttrDict(
-            {
-                'window_begin': _window_begin,
-                'window_end': _window_end,
-                'OPREFIX': f"{self.task_config.RUN}.t{self.task_config.cyc:02d}z.",
-                'APREFIX': f"{self.task_config.RUN}.t{self.task_config.cyc:02d}z."
-            }
-        )
-
-        # task_config is everything that this task should need
-        self.task_config = AttrDict(**self.task_config, **local_dict)
-
-        # Initialize the JRR_AOD database
-        self.jrr_aod_db = JrrAodDatabase(db_name="jrr_aod_obs.db",
-                                         dcom_dir=self.task_config.DCOMROOT,
-                                         obs_dir="jrr_aod")
-
-    @logit(logger)
-    def initialize(self) -> None:
-        """
-        """
-        # Update the database with new files
-        self.jrr_aod_db.ingest_files()
-
     @logit(logger)
     def execute(self) -> None:
         """
         """
-        def process_platform(platform, task_config, jrr_aod_db):
-            logger.info(f"Processing platform: {platform}")
-            input_files = jrr_aod_db.get_valid_files(window_begin=task_config.window_begin,
-                                                    window_end=task_config.window_end,
-                                                    dst_dir='jrr_aod',
-                                                    satellite=platform)
-            logger.info(f"Platform {platform}: number of valid files: {len(input_files)}")
-            
-            result = None
-            if len(input_files) > 0:
-                obs_space = 'jrr_aod'
-                platform_out = 'n20' if platform == 'j01' else platform
-                output_file = f"{task_config['RUN']}.t{task_config['cyc']:02d}z.viirs_{platform_out}_aod.nc"
-                context = {'provider': 'VIIRSAOD',
-                            'window_begin': task_config.window_begin,
-                            'window_end': task_config.window_end,
-                            'thinning_threshold': 0,
-                            'input_files': input_files,
-                            'output_file': output_file}
-                result = run_nc2ioda(task_config, obs_space, context)
-                logger.info(f"Platform {platform}: run_nc2ioda result: {result}")
-            
-            return platform, result
-
         # Create a partial function with the task_config and jrr_aod_db already set
         process_func = partial(process_platform, task_config=self.task_config, jrr_aod_db=self.jrr_aod_db)
 
