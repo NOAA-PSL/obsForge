@@ -88,6 +88,10 @@ class Bufr2ioda_Converter:
         # process query results and set ioda variables
         self.ioda_vars.set_from_query_result(r)
 
+        iodafile_path = self.bufr2ioda_config.ioda_filepath()
+        path, fname = os.path.split(iodafile_path)
+        os.makedirs(path, exist_ok=True)
+
         n_obs = self.ioda_vars.number_of_obs()
         self.logger.debug(f"Query result has {n_obs} obs")
         if (n_obs == 0):
@@ -108,10 +112,6 @@ class Bufr2ioda_Converter:
 
         # set seqNum, PreQC, ObsError, OceanBasin
         self.ioda_vars.additional_vars.construct()
-
-        iodafile_path = self.bufr2ioda_config.ioda_filepath()
-        path, fname = os.path.split(iodafile_path)
-        os.makedirs(path, exist_ok=True)
 
         metadata = self.ioda_vars.metadata
 
