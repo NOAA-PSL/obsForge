@@ -4,8 +4,8 @@ import numpy.ma as ma
 import os
 import time
 from datetime import datetime
-from pyiodaconv import bufr
 from collections import namedtuple
+from pyiodaconv import bufr
 from pyioda import ioda_obs_space as ioda_ospace
 from .util import parse_arguments, run_diff
 from .bufr2ioda_config import Bufr2iodaConfig
@@ -24,6 +24,30 @@ import tempfile
 # of detecting an error with high probability
 
 class Bufr2ioda_Converter:
+
+    def create_empty_ioda_file(self, iodafile_path):
+        # Define dimensions: zero-length 'Location'
+        dims = {'Location': 0}
+
+        obsspace = ioda_ospace.ObsSpace(iodafile_path, mode='w', dim_dict=dims)
+
+        # -- MetaData: Add an empty string variable (e.g. station_id)
+        stationID = np.array([], dtype=str)
+        # Define the dtype – for strings, use object or fixed-length bytes
+        dtype = 'S10'  # up to 10-character strings, you can adjust
+        fill_value = b''  # empty byte string as fill (required for S-type)
+        # Create an empty masked array of shape (0,)
+        stationID = ma.masked_array(data=np.empty((0,), dtype=dtype), mask=True)
+        stationID.set_fill_value(fill_value)
+
+        obsspace.create_var(
+            'MetaData/stationID',
+            dtype=stationID.dtype, fillval=stationID.fill_value
+        ) \
+            .write_attr('long_name', 'Station Identification') \
+            .write_data(stationID)
+        self.logger.debug(f"Created an empty IODA file: {iodafile_path}")
+
     def __init__(self, bufr2ioda_config, ioda_vars, logfile):
         ioda_vars.set_ocean_basin_nc_file(bufr2ioda_config.ocean_basin_nc_file_path())
         self.bufr2ioda_config = bufr2ioda_config
@@ -67,6 +91,7 @@ class Bufr2ioda_Converter:
         n_obs = self.ioda_vars.number_of_obs()
         self.logger.debug(f"Query result has {n_obs} obs")
         if (n_obs == 0):
+            self.create_empty_ioda_file(iodafile_path)
             self.logger.warning(f"No obs! Quitting.")
             sys.exit(0)
 
@@ -75,6 +100,7 @@ class Bufr2ioda_Converter:
         n_obs = self.ioda_vars.number_of_obs()
         self.logger.debug(f"Filtered result has {n_obs} obs")
         if (n_obs == 0):
+            self.create_empty_ioda_file(iodafile_path)
             self.logger.warning(f"No obs! Quitting.")
             sys.exit(0)
         self.logger.debug(f"Number of temperature obs = {self.ioda_vars.number_of_temp_obs()}")
