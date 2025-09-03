@@ -7,6 +7,7 @@
 
 set -eu
 
+echo "Start ... `date`"
 dir_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source $dir_root/ush/detect_machine.sh
@@ -30,7 +31,8 @@ usage() {
 # ==============================================================================
 
 # Defaults:
-INSTALL_PREFIX=""
+INSTALL_PREFIX="${dir_root}/install"
+CMAKE_INSTALL_LIBDIR="lib"
 CMAKE_OPTS=""
 BUILD_TARGET="${MACHINE_ID:-'localhost'}"
 BUILD_VERBOSE="NO"
@@ -66,7 +68,7 @@ case ${BUILD_TARGET} in
     source $dir_root/ush/module-setup.sh
     module use $dir_root/modulefiles
     module load obsforge/$BUILD_TARGET.$COMPILER
-    CMAKE_OPTS+=" -DMPIEXEC_EXECUTABLE=$MPIEXEC_EXEC -DMPIEXEC_NUMPROC_FLAG=$MPIEXEC_NPROC -DBUILD_GSIBEC=ON"
+    CMAKE_OPTS+=" -DMPIEXEC_EXECUTABLE=$MPIEXEC_EXEC -DMPIEXEC_NUMPROC_FLAG=$MPIEXEC_NPROC"
     module list
     ;;
   $(hostname))
@@ -81,7 +83,9 @@ CMAKE_OPTS+=" -DMACHINE=$BUILD_TARGET"
 
 # TODO: Remove LD_LIBRARY_PATH line as soon as permanent solution is available
 if [[ $BUILD_TARGET == 'wcoss2' ]]; then
-    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cray/pe/mpich/8.1.19/ofi/intel/19.0/lib"
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cray/pe/mpich/8.1.29/ofi/intel/2022.1/lib"
+  export LMOD_MPI_NAME=cray-mpich
+  export LMOD_MPI_VERSION=8.1.29-xhbciau
 fi
 
 BUILD_DIR=${BUILD_DIR:-$dir_root/build}
@@ -90,29 +94,25 @@ if [[ $CLEAN_BUILD == 'YES' ]]; then
 fi
 mkdir -p ${BUILD_DIR} && cd ${BUILD_DIR}
 
-# If INSTALL_PREFIX is not empty; install at INSTALL_PREFIX
-[[ -n "${INSTALL_PREFIX:-}" ]] && CMAKE_OPTS+=" -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
+# Set INSTALL_PREFIX as CMake option
+CMAKE_OPTS+=" -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
+
+# Set CMAKE_INSTALL_LIBDIR as CMake option
+CMAKE_OPTS+=" -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}"
 
 # Configure
-echo "Configuring ..."
+echo "Configuring ... `date`"
 set -x
 cmake \
   ${CMAKE_OPTS:-} \
   $dir_root/bundle
 set +x
 
-# Build
-echo "Building ..."
+# Install
+echo "Installing ... `date`"
 set -x
-make -j ${BUILD_JOBS:-6} VERBOSE=$BUILD_VERBOSE
+make install -j ${BUILD_JOBS:-8} VERBOSE=${BUILD_VERBOSE:-}
 set +x
 
-# Install
-if [[ -n ${INSTALL_PREFIX:-} ]]; then
-  echo "Installing ..."
-  set -x
-  make install
-  set +x
-fi
-
+echo "Finish ... `date`"
 exit 0
