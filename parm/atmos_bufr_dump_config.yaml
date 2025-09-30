@@ -9,80 +9,85 @@ atmosbufrdump:
     #   script_file: obstype.py
     #   mpi: [optional mpi settings]
     #   aux: [optional auxiliary files]  
-    # prepbufr_adpsfc:
-    #   method: bufr2netcdf
-    #   input_file: prepbufr
-    #   script_file: 
-    #     - prepbufr_adpsfc.py
-    #     - prepbufr_obs_builder.py
-      atms: 
-        output_file: atms_{splits/satId}.tm00.nc
-      amsua:
-        input_file:
-          - 1bamua.tm00.bufr_d
-          - esamua.tm00.bufr_d
-        mapping_file:
-          - amsua_1bamua.yaml
-          - amsua_esamua.yaml
-        output_file: amsua_{splits/satId}.tm00.nc
-        aux:
-          - amsua_channel_list.txt
-        scirpt_file:
-          - amsua.py
-          - atovs_obs_builder.py
-      avhrr:
-        input_file:
-          - avcsam.tm00.bufr_d
-          - avcspm.tm00.bufr_d
-      cris-fsr:
-        input_file: crisf4.tm00.bufr_d
-        output_file: cris_fsr_{splits/satId}.tm00.nc
-        mpi: 8
-      iasi:
-        input_file: iasidb.tm00.bufr_d
-        mpi: 8
-      mhs:
-        input_file:
-          - 1bmhs.tm00.bufr_d
-          - esmhs.tm00.bufr_d
-        mapping_file:
-          - mhs_1bmhs.yaml
-          - mhs_esmhs.yaml
-        script_file:
-          - mhs.py
-          - atovs_obs_builder.py
-        aux:
-          - mhs_channel_list.txt
-      ozone_omi:
-        input_file: omi.tm00.bufr_d
-      ozone_ompsnp:
-        input_file: ompsn8.tm00.bufr_d
-      ozone_ompstc:
-        input_file: ompst8.tm00.bufr_d
-      prepbufr_acft_profiles:
-        input_file: prepbufr.acft_profiles
-      prepbufr_sfcshp:
-        input_file: prepbufr
-      prepbufr_adpupa:
-        input_file: prepbufr
-      prepbufr_sfcshp:
-        input_file: prepbufr
-      satwnd_amv_abi:
-        input_file: satwnd.tm00.bufr_d
-      satwnd_amv_ahi:
-        input_file: satwnd.tm00.bufr_d
-      satwnd_amv_avhrr:
-        input_file: satwnd.tm00.bufr_d
-      satwnd_amv_modis:
-        input_file: satwnd.tm00.bufr_d
-      satwnd_amv_seviri:
-        input_file: satwnd.tm00.bufr_d
-      satwnd_amv_viirs:
-        input_file: satwnd.tm00.bufr_d
-      scatwnd_ascat:
-        input_file: ascatw.tm00.bufr_d
-      ssmis: 
-        input_file: ssmisu.tm00.bufr_d
+    prepbufr_adpsfc:
+      input_file: prepbufr
+      script_file: 
+        - prepbufr_adpsfc.py
+        - prepbufr_obs_builder.py
+    atms: 
+      output_file: atms_{splits/satId}.tm00.nc
+    amsua:
+      input_file:
+        - 1bamua.tm00.bufr_d
+        - esamua.tm00.bufr_d
+      mapping_file:
+        - amsua_1bamua.yaml
+        - amsua_esamua.yaml
+      output_file: amsua_{splits/satId}.tm00.nc
+      aux:
+        - amsua_channel_list.txt
+      scirpt_file:
+        - amsua.py
+        - atovs_obs_builder.py
+    avhrr:
+      input_file:
+        - avcsam.tm00.bufr_d
+        - avcspm.tm00.bufr_d
+    cris-fsr:
+      input_file: crisf4.tm00.bufr_d
+      output_file: cris_fsr_{splits/satId}.tm00.nc
+      mpi: 8
+    iasi:
+      input_file: iasidb.tm00.bufr_d
+      mpi: 8
+    mhs:
+      input_file:
+        - 1bmhs.tm00.bufr_d
+        - esmhs.tm00.bufr_d
+      mapping_file:
+        - mhs_1bmhs.yaml
+        - mhs_esmhs.yaml
+      script_file:
+        - mhs.py
+        - atovs_obs_builder.py
+      aux:
+        - mhs_channel_list.txt
+    ozone_omi:
+      input_file: omi.tm00.bufr_d
+      script_file:
+        - ozone_omi.py
+        - ozone_obs_builder.py
+    ozone_ompsnp:
+      input_file: ompsn8.tm00.bufr_d
+    ozone_ompstc:
+      input_file: ompst8.tm00.bufr_d
+    prepbufr_acft_profiles:
+      input_file: prepbufr.acft_profiles
+    prepbufr_sfcshp:
+      input_file: prepbufr
+    prepbufr_adpupa:
+      input_file: prepbufr
+    prepbufr_sfcshp:
+      input_file: prepbufr
+    satwnd_amv_abi:
+      input_file: satwnd.tm00.bufr_d
+      script_file:
+        - satwnd_amv_abi.py
+        - satwnd_amv_obs_builder.py
+    satwnd_amv_ahi:
+      input_file: satwnd.tm00.bufr_d
+    satwnd_amv_avhrr:
+      input_file: satwnd.tm00.bufr_d
+    satwnd_amv_modis:
+      input_file: satwnd.tm00.bufr_d
+    satwnd_amv_seviri:
+      input_file: satwnd.tm00.bufr_d
+    satwnd_amv_viirs:
+      input_file: satwnd.tm00.bufr_d
+    scatwnd_ascat:
+      input_file: ascatw.tm00.bufr_d
+    ssmis: 
+      input_file: ssmisu.tm00.bufr_d
   WALLTIME_ATMOS_BUFR_DUMP: '00:10:00'
   TASK_GEOM_ATMOS_BUFR_DUMP: '1:ppn=40:tpp=2'
   MEMORY_ATMOS_BUFR_DUMP: 96GB
