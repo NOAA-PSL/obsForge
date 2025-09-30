@@ -64,6 +64,9 @@ wxflowPATH="${HOMEobsforge}/ush/python"
 PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}${HOMEobsforge}/ush:${wxflowPATH}:${pyiodaPATH}"
 export PYTHONPATH
 
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${HOMEobsforge}/build/lib"
+export PYTHONPATH="${PYTHONPATH}:${HOMEobsforge}/build/lib/python3.11/site-packages"
+export PYTHONPATH="${PYTHONPATH}:${HOMEobsforge}/build/lib/python3.11/"
 # Restore stack soft limit:
 ulimit -S -s "${ulimit_s}"
 unset ulimit_s
