@@ -46,7 +46,7 @@ def merge_observation_defaults(task_yaml, section_name, default_obs=None):
         logger.debug(f"Merging observation '{obs_name}' with config: {obs_cfg}")
         obs_cfg = obs_cfg or {}  # handle None or empty dict
         merged_cfg = {**default_obs, **obs_cfg}
-  
+
         # Fill dynamic defaults based on obs_name
         if merged_cfg["input_file"] is None:
             merged_cfg["input_file"] = f"{obs_name}.tm00.bufr_d"
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     # Merge defaults for the 'atmosbufrdump' section
     task_yaml = merge_observation_defaults(task_yaml, 'atmosbufrdump')
- 
+
     # Combine configs together
     config = AttrDict(**config_env, **obsforge_dict)
     config = AttrDict(**config, **task_yaml['atmosbufrdump'])
