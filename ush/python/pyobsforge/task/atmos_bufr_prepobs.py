@@ -204,7 +204,7 @@ class AtmosBufrObsPrep(Task):
                 exec_cmd.add_default_arg(output_file)
 
             exec_cmd_list.append((ob_name, exec_cmd))
- 
+
         # get parallel processing info
         num_cores = mp.cpu_count()
         logger.info(f"Number of CPU cores available: {num_cores}")
