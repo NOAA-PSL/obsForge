@@ -5,7 +5,6 @@ import json
 import multiprocessing as mp
 import os
 import pathlib
-from itertools import chain
 from logging import getLogger
 from typing import Dict, Any
 
@@ -89,7 +88,7 @@ class AtmosBufrObsPrep(Task):
             for f in input_files:
                 src = os.path.join(self.task_config.COMIN_OBSPROC, f"{self.task_config.OPREFIX}{f}")
                 dest = os.path.join(self.task_config.DATA, os.path.basename(src))
-                if input_path: #  TODO A hack temporary to preserve directory structure if needed
+                if input_path:  # TODO A hack temporary to preserve directory structure if needed
                     second = self.task_config.COMIN_OBSPROC
                     # Take the last 3 parts of the second path
                     last_three = os.path.join(*second.split(os.sep)[-3:])
@@ -100,8 +99,6 @@ class AtmosBufrObsPrep(Task):
                     dest = os.path.join(sub_dir_tmp, os.path.basename(src))
                 copylist.append([src, dest])
                 staged_inputs.append(dest)
-
-
 
             # Stage mapping files
             for f in mapping_files:
@@ -121,8 +118,8 @@ class AtmosBufrObsPrep(Task):
                 copylist.append([src, dest])
                 staged_scripts.append(dest)
 
-            # Stage auxiliary files if any            
-            for f in aux_files: 
+            # Stage auxiliary files if any
+            for f in aux_files:
                 src = os.path.join(self.task_config.HOMEobsforge, "sorc", "spoc", "dump", "aux", f)
                 dest = os.path.join(self.task_config.DATA, os.path.basename(src))
                 copylist.append([src, dest])
@@ -182,7 +179,6 @@ class AtmosBufrObsPrep(Task):
             logger.info(f"Converting {input_str} to {output_file} using {script_file} and MPI={mpi}")
             if mpi > 1:
                 logger.info(f"Using MPI with {mpi} ranks for {ob_name}")
-                pythonpath = os.environ.get("PYTHONPATH", "")
                 exec_cmd = Executable("srun")
                 exec_cmd.add_default_arg("--export")
                 # exec_cmd.add_default_arg(f"ALL,PYTHONPATH={pythonpath}")
@@ -207,12 +203,12 @@ class AtmosBufrObsPrep(Task):
                 exec_cmd.add_default_arg('--output')
                 exec_cmd.add_default_arg(output_file)
 
-            exec_cmd_list.append((ob_name, exec_cmd)) 
-        
+            exec_cmd_list.append((ob_name, exec_cmd))
+ 
         # get parallel processing info
         num_cores = mp.cpu_count()
         logger.info(f"Number of CPU cores available: {num_cores}")
-                # run everything in parallel
+        # run everything in parallel
         with mp.Pool(num_cores) as pool:
             pool.starmap(mp_bufr_converter, exec_cmd_list)
 
