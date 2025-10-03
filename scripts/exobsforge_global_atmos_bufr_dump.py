@@ -39,12 +39,14 @@ def merge_observation_defaults(task_yaml, section_name, default_obs=None):
 
     section = task_yaml.get(section_name, {})
     observations = section.get('observations', {})
+    logger.debug(f"Merging defaults into section '{section_name}' with observations: {list(observations.keys())}")
 
     merged_observations = {}
     for obs_name, obs_cfg in observations.items():
+        logger.debug(f"Merging observation '{obs_name}' with config: {obs_cfg}")
         obs_cfg = obs_cfg or {}  # handle None or empty dict
         merged_cfg = {**default_obs, **obs_cfg}
-
+    
         # Fill dynamic defaults based on obs_name
         if merged_cfg["input_file"] is None:
             merged_cfg["input_file"] = f"{obs_name}.tm00.bufr_d"

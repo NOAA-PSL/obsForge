@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
+import json
 import multiprocessing as mp
 import os
 import pathlib
@@ -63,6 +64,7 @@ class AtmosBufrObsPrep(Task):
         """
         self.script2netcdf_obs = {}
         copylist = []
+        sub_dir_list = []
 
         for ob_name, ob_data in self.task_config.observations.items():
             logger.debug(f"Processing observation: {ob_name}: {ob_data}")
@@ -71,6 +73,8 @@ class AtmosBufrObsPrep(Task):
             input_files = ob_data.get('input_file', [])
             mapping_files = ob_data.get('mapping_file', [])
             script_files = ob_data.get('script_file', [])
+            aux_files = ob_data.get('aux_file', [])
+            input_path = ob_data.get('input_path', None)
 
             if isinstance(input_files, str):
                 input_files = [input_files]
@@ -85,8 +89,19 @@ class AtmosBufrObsPrep(Task):
             for f in input_files:
                 src = os.path.join(self.task_config.COMIN_OBSPROC, f"{self.task_config.OPREFIX}{f}")
                 dest = os.path.join(self.task_config.DATA, os.path.basename(src))
+                if input_path: #  TODO A hack temporary to preserve directory structure if needed
+                    second = self.task_config.COMIN_OBSPROC
+                    # Take the last 3 parts of the second path
+                    last_three = os.path.join(*second.split(os.sep)[-3:])
+                    sub_dir_tmp = os.path.join(self.task_config.DATA, last_three)
+                    logger.debug(f"Creating subdirectory for input path: {sub_dir_tmp}")
+                    if sub_dir_tmp not in sub_dir_list:
+                        sub_dir_list.append(sub_dir_tmp)
+                    dest = os.path.join(sub_dir_tmp, os.path.basename(src))
                 copylist.append([src, dest])
                 staged_inputs.append(dest)
+
+
 
             # Stage mapping files
             for f in mapping_files:
@@ -106,15 +121,34 @@ class AtmosBufrObsPrep(Task):
                 copylist.append([src, dest])
                 staged_scripts.append(dest)
 
+            # Stage auxiliary files if any            
+            for f in aux_files: 
+                src = os.path.join(self.task_config.HOMEobsforge, "sorc", "spoc", "dump", "aux", f)
+                dest = os.path.join(self.task_config.DATA, os.path.basename(src))
+                copylist.append([src, dest])
+
+            # Prepare input string for the script
+            input_str = staged_inputs
+            input_dict = ob_data.get('input')
+            logger.debug(input_dict)
+            if input_dict:
+                input_tmp = {}
+                for key, val in input_dict.items():
+                    input_tmp[key] = staged_inputs[int(val)]
+                input_str = json.dumps(input_tmp)
+
             # Register observation config (always as lists)
             self.script2netcdf_obs[ob_name] = {
-                'input_file': staged_inputs,
+                'input_str': input_str,
                 'output_file': [os.path.join(self.task_config.DATA, ob_data['output_file'])],
                 'script_file': staged_scripts,
                 'mpi': ob_data.get('mpi', 1),
             }
 
         # Stage all files
+        if sub_dir_list:
+            logger.debug(f"Creating subdirectories: {sub_dir_list}")
+            FileHandler({'mkdir': sub_dir_list}).sync()
         FileHandler({'copy_opt': copylist}).sync()
 
         # For now, as a hack, edit the mapping files to point to the correct reference time
@@ -141,17 +175,18 @@ class AtmosBufrObsPrep(Task):
 
         exec_cmd_list = []
         for ob_name, ob_data in self.script2netcdf_obs.items():
-            input_file = ob_data['input_file']
+            input_str = ob_data['input_str']
             output_file = ob_data['output_file']
             script_file = ob_data['script_file'][0]
             mpi = ob_data.get('mpi', 1)
-            logger.info(f"Converting {input_file} to {output_file} using {script_file} and MPI={mpi}")
+            logger.info(f"Converting {input_str} to {output_file} using {script_file} and MPI={mpi}")
             if mpi > 1:
                 logger.info(f"Using MPI with {mpi} ranks for {ob_name}")
                 pythonpath = os.environ.get("PYTHONPATH", "")
                 exec_cmd = Executable("srun")
                 exec_cmd.add_default_arg("--export")
-                exec_cmd.add_default_arg(f"ALL,PYTHONPATH={pythonpath}")
+                # exec_cmd.add_default_arg(f"ALL,PYTHONPATH={pythonpath}")
+                exec_cmd.add_default_arg("All")
                 exec_cmd.add_default_arg('-n')
                 exec_cmd.add_default_arg(str(mpi))
                 exec_cmd.add_default_arg('--mem')
@@ -161,14 +196,14 @@ class AtmosBufrObsPrep(Task):
                 exec_cmd.add_default_arg('python')
                 exec_cmd.add_default_arg(script_file)
                 exec_cmd.add_default_arg('--input')
-                exec_cmd.add_default_arg(input_file)
+                exec_cmd.add_default_arg(input_str)
                 exec_cmd.add_default_arg('--output')
                 exec_cmd.add_default_arg(output_file)
             else:
                 exec_cmd = Executable('python')
                 exec_cmd.add_default_arg(script_file)
                 exec_cmd.add_default_arg('--input')
-                exec_cmd.add_default_arg(input_file)
+                exec_cmd.add_default_arg(input_str)
                 exec_cmd.add_default_arg('--output')
                 exec_cmd.add_default_arg(output_file)
 
