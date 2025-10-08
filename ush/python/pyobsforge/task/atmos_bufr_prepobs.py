@@ -1,15 +1,28 @@
 #!/usr/bin/env python3
 
 import glob
+import json
+import multiprocessing as mp
 import os
+import pathlib
 from logging import getLogger
 from typing import Dict, Any
 
 from wxflow import (AttrDict, Task, add_to_datetime, to_timedelta,
                     logit, FileHandler, Executable, YAMLFile)
-import pathlib
+
 
 logger = getLogger(__name__.split('.')[-1])
+
+
+def mp_bufr_converter(ob_name, exec_cmd):
+    try:
+        logger.debug(f"Executing {exec_cmd}")
+        exec_cmd()
+    except Exception as e:
+        logger.warning(f"Conversion failed for {ob_name}")
+        logger.warning(f"Execution failed for {exec_cmd}: {e}")
+        logger.debug("Exception details", exc_info=True)
 
 
 class AtmosBufrObsPrep(Task):
@@ -41,53 +54,103 @@ class AtmosBufrObsPrep(Task):
     @logit(logger)
     def initialize(self) -> None:
         """
-        Initialize an atmospheric BUFR observation prep task
+        Initialize an atmospheric BUFR observation prep task.
 
-        This method will initialize an atmospheric BUFR observation prep task.
-        This includes:
-        - Staging input BUFR files
-        - Staging configuration files
-        - Staging any scripts needed to run the task
+        Steps:
+        - Collect input BUFR, mapping, and script files
+        - Stage files into the working directory
+        - Register observations for bufr2netcdf conversion
         """
-        # create dictionary of observations to process using bufr2netcdf
-        self.bufr2netcdf_obs = {}
-        # Create dictionary of files to stage
-        src_bufr_files = []
-        dest_bufr_files = []
-        src_mapping_files = []
-        dest_mapping_files = []
-        src_script_files = []
-        dest_script_files = []
-        for ob_name, ob_data in self.task_config.observations.items():
-            if ob_data['method'] == 'bufr2netcdf':
-                input_file = os.path.join(self.task_config.COMIN_OBSPROC, f"{self.task_config.OPREFIX}{ob_data['input file']}")
-                output_file = os.path.join(self.task_config.DATA, ob_data['output file'])
-                mapping_file = os.path.join(self.task_config.HOMEobsforge, "sorc", "spoc", "dump", "config",
-                                            "atmosphere", ob_data['mapping file'])
-                src_bufr_files.append(input_file)
-                dest_bufr_files.append(os.path.join(self.task_config.DATA, os.path.basename(input_file)))
-                src_mapping_files.append(mapping_file)
-                dest_mapping_files.append(os.path.join(self.task_config.DATA, os.path.basename(mapping_file)))
-                self.bufr2netcdf_obs[ob_name] = {
-                    'input_file': os.path.join(self.task_config.DATA, os.path.basename(input_file)),
-                    'output_file': output_file,
-                    'mapping_file': os.path.join(self.task_config.DATA, os.path.basename(mapping_file))
-                    # TODO: MPI information here
-                }
-        # Stage the input files
+        self.script2netcdf_obs = {}
         copylist = []
-        for src, dest in zip(src_bufr_files, dest_bufr_files):
-            copylist.append([src, dest])
-        for src, dest in zip(src_mapping_files, dest_mapping_files):
-            copylist.append([src, dest])
-        for src, dest in zip(src_script_files, dest_script_files):
-            copylist.append([src, dest])
+        sub_dir_list = []
 
+        for ob_name, ob_data in self.task_config.observations.items():
+            logger.debug(f"Processing observation: {ob_name}: {ob_data}")
+
+            # Normalize fields to lists
+            input_files = ob_data.get('input_file', [])
+            mapping_files = ob_data.get('mapping_file', [])
+            script_files = ob_data.get('script_file', [])
+            aux_files = ob_data.get('aux_file', [])
+            preserve_rel_path = ob_data.get('preserve_rel_path', None)
+
+            if isinstance(input_files, str):
+                input_files = [input_files]
+            if isinstance(mapping_files, str):
+                mapping_files = [mapping_files]
+            if isinstance(script_files, str):
+                script_files = [script_files]
+
+            staged_inputs, staged_mappings, staged_scripts = [], [], []
+
+            # Stage BUFR input files
+            for f in input_files:
+                src = os.path.join(self.task_config.COMIN_OBSPROC, f"{self.task_config.OPREFIX}{f}")
+                dest = os.path.join(self.task_config.DATA, os.path.basename(src))
+                if preserve_rel_path:  # TODO A hack temporary to preserve directory structure if needed
+                    comin_obsproc = self.task_config.COMIN_OBSPROC
+                    # Take the last 3 parts of the comin_obsproc path
+                    last_three = os.path.join(*comin_obsproc.split(os.sep)[-3:])
+                    sub_dir_tmp = os.path.join(self.task_config.DATA, last_three)
+                    logger.debug(f"Creating subdirectory for input path: {sub_dir_tmp}")
+                    if sub_dir_tmp not in sub_dir_list:
+                        sub_dir_list.append(sub_dir_tmp)
+                    dest = os.path.join(sub_dir_tmp, os.path.basename(src))
+                copylist.append([src, dest])
+                staged_inputs.append(dest)
+
+            # Stage mapping files
+            for f in mapping_files:
+                src = os.path.join(
+                    self.task_config.HOMEobsforge, "sorc", "spoc", "dump", "config", "atmosphere", f
+                )
+                dest = os.path.join(self.task_config.DATA, os.path.basename(src))
+                copylist.append([src, dest])
+                staged_mappings.append(dest)
+
+            # Stage script files
+            for f in script_files:
+                src = os.path.join(
+                    self.task_config.HOMEobsforge, "sorc", "spoc", "dump", "scripts", "atmosphere", f
+                )
+                dest = os.path.join(self.task_config.DATA, os.path.basename(src))
+                copylist.append([src, dest])
+                staged_scripts.append(dest)
+
+            # Stage auxiliary files if any
+            for f in aux_files:
+                src = os.path.join(self.task_config.HOMEobsforge, "sorc", "spoc", "dump", "aux", f)
+                dest = os.path.join(self.task_config.DATA, os.path.basename(src))
+                copylist.append([src, dest])
+
+            # Prepare input string for the script
+            input_str = staged_inputs
+            input_dict = ob_data.get('input')
+            logger.debug(input_dict)
+            if input_dict:
+                input_tmp = {}
+                for key, val in input_dict.items():
+                    input_tmp[key] = staged_inputs[int(val)]
+                input_str = json.dumps(input_tmp)
+
+            # Register observation config (always as lists)
+            self.script2netcdf_obs[ob_name] = {
+                'input_str': input_str,
+                'output_file': [os.path.join(self.task_config.DATA, ob_data['output_file'])],
+                'script_file': staged_scripts,
+                'mpi': ob_data.get('mpi', 1),
+            }
+
+        # Stage all files
+        if sub_dir_list:
+            logger.debug(f"Creating subdirectories: {sub_dir_list}")
+            FileHandler({'mkdir': sub_dir_list}).sync()
         FileHandler({'copy_opt': copylist}).sync()
 
         # For now, as a hack, edit the mapping files to point to the correct reference time
         # We should eventually modify them in SPOC to use Jinja templates
-        for dest in dest_mapping_files:
+        for dest in staged_mappings:
             yaml_file = YAMLFile(dest)
             try:
                 yaml_file['bufr']['variables']['timestamp']['timeoffset']['referenceTime'] = \
@@ -102,28 +165,59 @@ class AtmosBufrObsPrep(Task):
         """
         Execute converters from BUFR to IODA format for atmospheric observations
         """
-        #  ${obsforge_dir}/build/bin/bufr2netcdf.x "$input_file" "${mapping_file}" "$output_file"
+        #  ${obsforge_dir}/build/bin/script2netcdf.x "$input_file" "$output_file"
 
         # Loop through BUFR to netCDF observations and convert them
-        # TODO: Add MPI support
 
-        for ob_name, ob_data in self.bufr2netcdf_obs.items():
-            input_file = ob_data['input_file']
+        exec_cmd_list = []
+        mpi_count = 0
+        for ob_name, ob_data in self.script2netcdf_obs.items():
+            input_str = ob_data['input_str']
             output_file = ob_data['output_file']
-            mapping_file = ob_data['mapping_file']
-            logger.info(f"Converting {input_file} to {output_file} using {mapping_file}")
-            exec_cmd = Executable(os.path.join(self.task_config.HOMEobsforge, "build", "bin", "bufr2netcdf.x"))
-            exec_cmd.add_default_arg(input_file)
-            exec_cmd.add_default_arg(mapping_file)
-            exec_cmd.add_default_arg(output_file)
-            try:
-                logger.debug(f"Executing {exec_cmd}")
-                exec_cmd()
-            except Exception as e:
-                logger.warning(f"Conversion failed for {ob_name}")
-                logger.warning(f"Execution failed for {exec_cmd}: {e}")
-                logger.debug("Exception details", exc_info=True)
-                continue  # skip to the next observation
+            script_files = ob_data.get('script_file', [])
+            if not script_files:
+                logger.error(f"No script_file provided for observation '{ob_name}'. Skipping.")
+                continue
+            script_file = script_files[0]
+            mpi = ob_data.get('mpi', 1)
+            logger.info(f"Converting {input_str} to {output_file} using {script_file} and MPI={mpi}")
+            if mpi > 1:
+                mpi_count += int(mpi)
+                logger.info(f"Using MPI with {mpi} ranks for {ob_name}")
+                if self.task_config.MPI_LAUNCHER.lower() == 'mpiexec':
+                    exec_cmd = Executable("mpiexec")
+                    args = [
+                        "-n", str(mpi),
+                        "python", script_file,
+                        "--input", input_str,
+                        "--output", output_file,
+                    ]
+                else:  # default to srun
+                    exec_cmd = Executable("srun")
+                    args = [
+                        "--export", "All",
+                        "-n", str(mpi),
+                        "--mem", "0G",              # no memory limit
+                        "--time", "00:30:00",
+                        "python", script_file,
+                        "--input", input_str,
+                        "--output", output_file,
+                    ]
+            else:
+                exec_cmd = Executable('python')
+                args = [script_file, '--input', input_str, '--output', output_file]
+
+            for arg in args:
+                exec_cmd.add_default_arg(arg)
+
+            exec_cmd_list.append((ob_name, exec_cmd))
+
+        # get parallel processing info
+        num_workers = min(len(exec_cmd_list) + mpi_count + 5, max(1, mp.cpu_count() - 1))
+        logger.info(f"Number of worker processes to use: {num_workers} (CPU cores available: {mp.cpu_count()})")
+        # run everything in parallel
+        with mp.Pool(num_workers) as pool:
+            pool.starmap(mp_bufr_converter, exec_cmd_list)
 
     @logit(logger)
     def finalize(self) -> None:
