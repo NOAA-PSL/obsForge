@@ -1,5 +1,5 @@
 import numpy as np
-from pyiodaconv import bufr
+import bufr
 from b2iconverter.ioda_variables import IODAVariables
 from b2iconverter.ioda_addl_vars import IODAAdditionalVariables, compute_seq_num
 
@@ -23,6 +23,7 @@ class BathyIODAVariables(IODAVariables):
         self.temp -= 273.15
 
     def filter(self):
+        super().filter()
         mask = self.TemperatureFilter()
         self.metadata.filter(mask)
         self.temp = self.temp[mask]

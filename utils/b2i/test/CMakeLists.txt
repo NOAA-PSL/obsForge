@@ -1,8 +1,7 @@
 # Find Python (required for running tests)
 find_package(Python REQUIRED)
 string(REGEX REPLACE "^([0-9]+\\.[0-9]+).*" "\\1" PYTHON_MAJOR_MINOR ${Python_VERSION})
-set(PYIODACONV_DIR "${CMAKE_BINARY_DIR}/lib/python${PYTHON_MAJOR_MINOR}/")
-
+set(PYIODACONV_DIR "${CMAKE_BINARY_DIR}/lib/python${PYTHON_MAJOR_MINOR}:${CMAKE_BINARY_DIR}/lib/python${PYTHON_MAJOR_MINOR}/site-packages")
 
 # Define test input YAML files
 list(APPEND b2i_test_input
@@ -10,13 +9,12 @@ list(APPEND b2i_test_input
     testinput/bufr2ioda_insitu_profile_bathy_2021063006.yaml.in
     testinput/bufr2ioda_insitu_profile_glider_2021063006.yaml.in
     testinput/bufr2ioda_insitu_profile_tesac_2021063006.yaml.in
-    testinput/bufr2ioda_insitu_profile_tropical_2019010700.yaml.in
     testinput/bufr2ioda_insitu_profile_xbtctd_2021063006.yaml.in
-    testinput/bufr2ioda_insitu_surface_drifter_2019010700.yaml.in
     testinput/bufr2ioda_insitu_surface_trkob_2021063006.yaml.in
 	testinput/bufr2ioda_insitu_profile_taotriton_2025061900.yaml.in
 	testinput/bufr2ioda_insitu_profile_pirata_2025061900.yaml.in
 	testinput/bufr2ioda_insitu_profile_rama_2025061900.yaml.in
+	testinput/bufr2ioda_insitu_surface_ndbc_2025061900.yaml.in
 	testinput/bufr2ioda_insitu_surface_dbuoyb_drifter_2019010700.yaml.in
 )
 
@@ -26,13 +24,12 @@ list(APPEND b2i_test_ref
     testref/bufr2ioda_insitu_profile_bathy_2021063006.ref
     testref/bufr2ioda_insitu_profile_glider_2021063006.ref
     testref/bufr2ioda_insitu_profile_tesac_2021063006.ref
-    testref/bufr2ioda_insitu_profile_tropical_2019010700.ref
     testref/bufr2ioda_insitu_profile_xbtctd_2021063006.ref
-    testref/bufr2ioda_insitu_surface_drifter_2019010700.ref
     testref/bufr2ioda_insitu_surface_trkob_2021063006.ref
 	testref/bufr2ioda_insitu_profile_taotriton_2025061900.ref
 	testref/bufr2ioda_insitu_profile_pirata_2025061900.ref
 	testref/bufr2ioda_insitu_profile_rama_2025061900.ref
+	testref/bufr2ioda_insitu_surface_ndbc_2025061900.ref
 	testref/bufr2ioda_insitu_surface_dbuoyb_drifter_2019010700.ref
 )
 
@@ -80,9 +77,8 @@ function(CREATE_CONFIG_FILE
     file(WRITE "${test_config_out}" "${temp_content3}")
 endfunction()
 
-
 function(CHECK_AND_SET_PATH RESULT_VAR PATH_LIST)
-    foreach(PATH ${PATH_LIST})
+    foreach(PATH IN LISTS PATH_LIST)
         if(EXISTS ${PATH})
             set(${RESULT_VAR} ${PATH} PARENT_SCOPE)
             set(${RESULT_VAR}_EXISTS TRUE PARENT_SCOPE)
@@ -107,7 +103,7 @@ set(BUFR_TEST_DIR_PATH_LIST
 )
 CHECK_AND_SET_PATH(
     BUFR_TEST_DIR
-    ${BUFR_TEST_DIR_PATH_LIST}
+    "${BUFR_TEST_DIR_PATH_LIST}"
 )
 if (NOT BUFR_TEST_DIR_EXISTS)
     message(WARNING "BUFR test file directory not found -- bufr to ioda tests not generated.")
@@ -126,7 +122,7 @@ else()
     )
     CHECK_AND_SET_PATH(
         OCEAN_BASIN_FILE
-        ${OCEAN_BASIN_FILE_PATH_LIST}
+        "${OCEAN_BASIN_FILE_PATH_LIST}"
     )
     if (NOT OCEAN_BASIN_FILE_EXISTS)
         message(WARNING "Ocean basin data file not found -- bufr to ioda tests not generated.")
@@ -199,6 +195,7 @@ if(GENERATE_B2I_TESTS)
     ADD_B2I_TEST("profile_pirata" "mbuoyb")
     ADD_B2I_TEST("profile_taotriton" "mbuoyb")
     ADD_B2I_TEST("profile_xbtctd" "xbtctd")
+    ADD_B2I_TEST("surface_ndbc" "mbuoyb")
     ADD_B2I_TEST("surface_trkob" "trkob")
 	ADD_B2I_TEST("surface_dbuoyb_drifter" "dbuoyb")
 endif()

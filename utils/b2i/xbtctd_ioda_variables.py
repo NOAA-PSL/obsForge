@@ -1,5 +1,5 @@
 import numpy as np
-from pyiodaconv import bufr
+import bufr
 from b2iconverter.ioda_variables import IODAVariables
 
 
@@ -18,6 +18,7 @@ class XbtctdIODAVariables(IODAVariables):
         return q
 
     def filter(self):
+        super().filter()
         mask = self.TemperatureFilter() \
             & self.SalinityFilter()
         self.temp = self.temp[mask]

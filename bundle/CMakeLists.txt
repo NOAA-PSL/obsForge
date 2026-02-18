@@ -35,6 +35,8 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 # -----------------
 ecbuild_bundle_initialize()
 
+option( ON_NOAA_HPC "Build with NOAA HPC specific settings" OFF )
+
 # jedi-cmake
 ecbuild_bundle( PROJECT jedicmake SOURCE "../sorc/jedicmake" )
 include( jedicmake/cmake/Functions/git_functions.cmake )
@@ -44,7 +46,7 @@ option( ENABLE_LORENZ95_MODEL "Build LORENZ95 toy model" OFF )
 option( ENABLE_QG_MODEL "Build QG toy model" OFF )
 
 # EMC BUFR-query library
-set( SKIP_DOWNLOAD_TEST_DATA OFF )
+option( SKIP_DOWNLOAD_TEST_DATA "Skip download of test data tarball" OFF )
 ecbuild_bundle( PROJECT bufr-query SOURCE "../sorc/bufr-query" )
 
 # Core JEDI repositories
@@ -57,12 +59,6 @@ ecbuild_bundle( PROJECT ioda SOURCE "../sorc/ioda" )
 # Build JEDI/DA or other peripherals
 ecbuild_bundle( PROJECT obsforge-utils SOURCE "../utils" )
 ecbuild_bundle( PROJECT da-utils SOURCE "../sorc/da-utils" )
-
-# Build IODA converters
-option(BUILD_IODA_CONVERTERS "Build IODA Converters" ON)
-if(BUILD_IODA_CONVERTERS)
-  ecbuild_bundle( PROJECT iodaconv SOURCE "../sorc/iodaconv" )
-endif()
 
 # obsForge
 ecbuild_bundle( PROJECT obsForge SOURCE "../")

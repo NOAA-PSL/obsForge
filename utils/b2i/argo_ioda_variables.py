@@ -1,5 +1,5 @@
 import numpy as np
-from pyiodaconv import bufr
+import bufr
 from b2iconverter.ioda_variables import IODAVariables
 
 
@@ -23,6 +23,7 @@ class ArgoIODAVariables(IODAVariables):
         self.metadata.depth = np.float32(self.metadata.depth.astype(float) * 0.0001)
 
     def filter(self):
+        super().filter()
         TS_mask = self.TemperatureFilter() & self.SalinityFilter()
         # Separate ARGO profiles from subpfl tank
         # the index for ARGO floats where the second number of the stationID=9

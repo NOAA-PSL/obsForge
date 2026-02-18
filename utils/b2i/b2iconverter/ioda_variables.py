@@ -1,5 +1,5 @@
 import numpy as np
-from pyiodaconv import bufr
+import bufr
 from .util import *
 from .ioda_metadata import IODAMetadata
 from .ioda_addl_vars import IODAAdditionalVariables
@@ -94,7 +94,11 @@ class IODAVariables:
 
     def filter(self):
         mask = clean_lat_lon(self.metadata.lat, self.metadata.lon)
+        if hasattr(self.metadata, 'depth'):
+            depth_mask = clean_depth(self.metadata.depth)
+            mask = mask & depth_mask
         self.metadata.filter(mask)
+
         if hasattr(self, 'temp'):
             self.temp = self.temp[mask]
         if hasattr(self, 'saln'):

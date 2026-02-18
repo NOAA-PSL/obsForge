@@ -15,8 +15,11 @@ ulimit_s=$( ulimit -S -s )
 source "${HOMEobsforge}/ush/detect_machine.sh"
 source "${HOMEobsforge}/ush/module-setup.sh"
 
+if [[ "${MACHINE_ID}" != "UNKNOWN" ]]; then
+    module use "${HOMEobsforge}/modulefiles"
+fi
+
 # Load our modules:
-module use "${HOMEobsforge}/modulefiles"
 
 case "${MACHINE_ID}" in
   ("hera" | "ursa" | "orion" | "hercules" | "wcoss2" | "gaeac5" | "gaeac6")
@@ -26,7 +29,7 @@ case "${MACHINE_ID}" in
       # TODO: Add path to ObsForge libraries and cray-mpich as temporary patches
       # TODO: Remove LD_LIBRARY_PATH lines as soon as permanent solutions are available
       export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${HOMEobsforge}/build/lib"
-      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cray/pe/mpich/8.1.19/ofi/intel/19.0/lib"
+      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cray/pe/mpich/8.1.29/ofi/intel/2022.1/lib"
     fi
     module load "${MODS}/${MACHINE_ID}"
     ncdump=$( command -v ncdump )
@@ -61,9 +64,12 @@ fi
 pyiodaPATH="${HOMEobsforge}/build/lib/python${PYTHON_VERSION}/"
 # Add wxflow to PYTHONPATH
 wxflowPATH="${HOMEobsforge}/ush/python"
-PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}${HOMEobsforge}/ush:${wxflowPATH}:${pyiodaPATH}"
+# add DA utils python scripts to PYTHONPATH
+dautilsPATH="${HOMEobsforge}/sorc/da-utils/ush"
+PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}${HOMEobsforge}/ush:${wxflowPATH}:${pyiodaPATH}:${dautilsPATH}"
 export PYTHONPATH
 
+export PYTHONPATH="${PYTHONPATH}:${HOMEobsforge}/build/lib/python${PYTHON_VERSION}/site-packages"
 # Restore stack soft limit:
 ulimit -S -s "${ulimit_s}"
 unset ulimit_s

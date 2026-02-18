@@ -47,13 +47,13 @@ namespace obsforge {
       int nobs = ncFile.getDim("Location").getSize();
 
       // Set the int metadata names
-      std::vector<std::string> intMetadataNames = {"oceanBasin"};
+      std::vector<std::string> intMetadataNames = {"oceanBasin", "rcptdateTime", "stationID"};
 
       // Set the float metadata name
       std::vector<std::string> floatMetadataNames = {"depth"};
 
       // Create instance of iodaVars object
-      obsforge::preproc::iodavars::IodaVars iodaVars(nobs, floatMetadataNames, intMetadataNames);
+      obsforge::preproc::iodavars::IodaVars iodaVars(nobs, 1, floatMetadataNames, intMetadataNames);
 
       // TODO(Mindo): This is incomplete and needed to leverage ioda for the reading
       // Check if the MetaData group is null
@@ -98,6 +98,25 @@ namespace obsforge {
       std::vector<int> oceanbasinData(iodaVars.location_);
       oceanbasinVar.getVar(oceanbasinData.data());
 
+      netCDF::NcVar rcptdateTimeVar = metaDataGroup.getVar("rcptdateTime");
+      std::vector<int> rcptdateTimeData(iodaVars.location_);
+      rcptdateTimeVar.getVar(rcptdateTimeData.data());
+
+      netCDF::NcVar stationIDVar = metaDataGroup.getVar("stationID");
+      std::vector<int> stationIDData(iodaVars.location_, -999);  // Initialize with default = -999
+
+      // Only accept NC_INT (Currently argo, glider and xbtctd)
+      if (!stationIDVar.isNull() &&
+          stationIDVar.getType().getTypeClass() == netCDF::NcType::nc_INT) {
+              oops::Log::info() << "Variable 'stationID' is int; reading it." << std::endl;
+              stationIDVar.getVar(stationIDData.data());
+      } else {
+      // keep default -999 if data type is string
+      oops::Log::debug()
+          << "MetaData/stationID is not int (or string). Using default -999."
+          << std::endl;
+      }
+
       // Define and check obs groups
       struct { const char* name; netCDF::NcGroup group; } groups[] = {
           {"ObsValue", ncFile.getGroup("ObsValue")},
@@ -141,7 +160,7 @@ namespace obsforge {
         iodaVars.obsError_(i) = obserrData[i];
         iodaVars.preQc_(i) = preqcData[i];
         // Save in optional intMetadata
-        iodaVars.intMetadata_.row(i) << oceanbasinData[i];
+        iodaVars.intMetadata_.row(i) << oceanbasinData[i], rcptdateTimeData[i], stationIDData[i];
       }
 
       // Extract EpochTime String Format(1970-01-01T00:00:00Z)
